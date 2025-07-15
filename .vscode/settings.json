@@ -1,0 +1,9 @@
+{
+    "editor.formatOnSave": true,
+    "python.formatting.provider": "none",
+    "isort.args": [
+        "--settings-path",
+        ".isort.cfg"
+    ],
+    "isort.path": "isort"
+}
