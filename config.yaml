@@ -1,0 +1,51 @@
+# for entries with create time before this date, we will be skipped
+start_datetime: "2025-04-13T13:00:00.000000+00:00"
+
+kvm:
+  base_url: "https://dev.kartevonmorgen.org"
+  entry_url: ${kvm.base_url}/m/main/e
+
+app:
+  title: "kartevonmorgen workflows"
+  host: "0.0.0.0"
+  port: 7921
+  cors:
+    allowed_origins: ["*"]
+    allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
+    allowed_headers: ["*"]
+    allow_credentials: true
+
+  openapi_url: /workflows/openapi.json
+
+email:
+  domain: "dev.kartevonmorgen.org"
+  api_key: "REMOVED_SECRET"
+  url: "https://api.eu.mailgun.net/v3/dev.kartevonmorgen.org/messages"
+  rate_limit: 5 # requests to mailgun per second
+  max_retries: 4
+  retry_delay: 2
+  concurrency: 10
+  test_email_recipient: "navidkalaei@gmail.com" # email to send test emails to. is optional
+  unsubscribe_url: "https://dev.kartevonmorgen.org/workflows/v1/unsubscribe" # change this to the unsubscribe url of your app
+  area_subscription_creates:
+      sender: "Kartevonmorgen <noreply@dev.kartevonmorgen.org>"
+      subject: "New entry in your area"
+      template: "templates/{language}/area_subscription/creates/{interval}.liquid"
+      start_to_close_timeout_seconds: 300
+
+ofdb:
+  url: https://dev.ofdb.io/v0
+
+db:
+  name: kvm
+  user: postgres
+  password: REMOVED_SECRET
+  host: localhost
+  port: 5432
+
+areas:
+  - name: europe
+    lats: [43.9137, 55.3666]
+    lngs: [-5.8227, 20.1489]
+    lat_n_chunks: 25
+    lng_n_chunks: 25
