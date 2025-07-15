@@ -1,0 +1,30 @@
+[project]
+name = "kvmflows"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Navid Kalaei",email = "navidkalaei@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12,<4.0"
+dependencies = [
+    "loguru (>=0.7.3,<0.8.0)",
+    "rich (>=14.0.0,<15.0.0)",
+    "httpx (>=0.28.1,<0.29.0)",
+    "peewee (>=3.18.2,<4.0.0)",
+    "omegaconf (>=2.3.0,<3.0.0)",
+    "hydra-core (>=1.3.2,<2.0.0)",
+    "fastapi (>=0.116.1,<0.117.0)",
+    "pydantic (>=2.11.7,<3.0.0)",
+    "uvicorn (>=0.35.0,<0.36.0)",
+    "python-liquid (>=2.0.2,<3.0.0)",
+    "psycopg2-binary (>=2.9.10,<3.0.0)"
+]
+
+[tool.poetry]
+packages = [{include = "kvmflows", from = "src"}]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
