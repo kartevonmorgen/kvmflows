@@ -1,44 +1,64 @@
-Hallo,
+<p>Hallo,</p>
 
-{%- assign count = entries | size -%}
-{%- if interval == 'hourly' -%}
-{%- if count == 1 %}
-In der letzten Stunde gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
-{%- else %}
-In der letzten Stunde gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
-{%- endif -%}
-{%- elsif interval == 'daily' -%}
-{%- if count == 1 %}
-Am letzten Tag gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
-{%- else %}
-Am letzten Tag gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
-{%- endif -%}
-{%- elsif interval == 'weekly' -%}
-{%- if count == 1 %}
-In der letzten Woche gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
-{%- else %}
-In der letzten Woche gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
-{%- endif -%}
-{%- else -%}
-{%- if count == 1 %}
-Es gab {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
-{%- else %}
-Es gab {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
-{%- endif -%}
+{% assign count = entries | size %}
+{% if interval == 'hourly' %}
+  {% if count == 1 %}
+<p>In der letzten Stunde gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"</p>
+  {% else %}
+<p>In der letzten Stunde gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"</p>
+  {% endif %}
+{% elsif interval == 'daily' %}
+  {% if count == 1 %}
+<p>Am letzten Tag gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"</p>
+  {% else %}
+<p>Am letzten Tag gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"</p>
+  {% endif %}
+{% elsif interval == 'weekly' %}
+  {% if count == 1 %}
+<p>In der letzten Woche gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"</p>
+  {% else %}
+<p>In der letzten Woche gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"</p>
+  {% endif %}
+{% else %}
+  {% if count == 1 %}
+<p>Es gab {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"</p>
+  {% else %}
+<p>Es gab {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"</p>
+  {% endif %}
 {% endif %}
+
 {% for entry in entries %}
-<a href="https://{{ domain }}/m/main/e/{{ entry.id }}">{{ entry.title }}</a>
-    {{ entry.description }}
-    Tags: {{ entry.tags | default: "Keine Tags" }}
-    Adresse: {{ entry.address_line | default: "Adresse nicht verfügbar" }}
-    Webseite: {{ entry.homepage | default: "Webseite nicht verfügbar" }}
-    Email-Adresse: {{ entry.email | default: "Email nicht verfügbar" }}
-    Telefon: {{ entry.phone | default: "Telefon nicht verfügbar" }}
-
-{% unless forloop.last %}---------{% endunless %}
+<div style="margin-bottom: 20px; padding: 15px; border-left: 3px solid #4CAF50;">
+  <h3><a href="https://{{ domain }}/m/main/e/{{ entry.id }}" style="color: #2196F3; text-decoration: none;">{{ entry.title }}</a></h3>
+  <p>{{ entry.description }}</p>
+  
+  {% if entry.tags %}
+  <p><strong>Tags:</strong> {{ entry.tags }}</p>
+  {% endif %}
+  
+  {% if entry.address_line %}
+  <p><strong>Adresse:</strong> {{ entry.address_line }}</p>
+  {% endif %}
+  
+  {% if entry.homepage %}
+  <p><strong>Webseite:</strong> <a href="{{ entry.homepage }}" style="color: #2196F3;">{{ entry.homepage }}</a></p>
+  {% endif %}
+  
+  {% if entry.email %}
+  <p><strong>Email-Adresse:</strong> <a href="mailto:{{ entry.email }}" style="color: #2196F3;">{{ entry.email }}</a></p>
+  {% endif %}
+  
+  {% if entry.phone %}
+  <p><strong>Telefon:</strong> {{ entry.phone }}</p>
+  {% endif %}
+</div>
 {% endfor %}
-euphorische Grüße,
-das Karte von morgen-Team
-https://www.kartevonmorgen.org
 
-<p><small>Um sich abzumelden, klicken Sie auf <a href="{{ unsubscribe_link }}">diesen Link</a></small></p>
+<p>euphorische Grüße,<br>
+das Karte von morgen-Team<br>
+<a href="https://www.kartevonmorgen.org" style="color: #2196F3;">https://www.kartevonmorgen.org</a></p>
+
+<hr style="margin: 30px 0; border: none; border-top: 1px solid #ddd;">
+<p style="font-size: 12px; color: #666;">
+  Um sich abzumelden, klicken Sie auf <a href="{{ unsubscribe_link }}" style="color: #2196F3;">diesen Link</a>
+</p>
