@@ -1,0 +1,44 @@
+Hallo,
+
+{%- assign count = entries | size -%}
+{%- if interval == 'hourly' -%}
+{%- if count == 1 %}
+In der letzten Stunde gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
+{%- else %}
+In der letzten Stunde gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
+{%- endif -%}
+{%- elsif interval == 'daily' -%}
+{%- if count == 1 %}
+Am letzten Tag gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
+{%- else %}
+Am letzten Tag gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
+{%- endif -%}
+{%- elsif interval == 'weekly' -%}
+{%- if count == 1 %}
+In der letzten Woche gab es {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
+{%- else %}
+In der letzten Woche gab es {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
+{%- endif -%}
+{%- else -%}
+{%- if count == 1 %}
+Es gab {{ count }} neuen Eintrag für dein Abo "{{ subscription.title }}"
+{%- else %}
+Es gab {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
+{%- endif -%}
+{% endif %}
+{% for entry in entries %}
+{{ entry.title }} [<a href="https://{{ domain }}/m/main/e/{{ entry.id }}">Link zum Eintrag</a>] ({{ entry.category | default: "Kategorie nicht verfügbar" }}) 
+    {{ entry.description }}
+    Tags: {{ entry.tags | default: "Keine Tags" }}
+    Adresse: {{ entry.address_line | default: "Adresse nicht verfügbar" }}
+    Webseite: {{ entry.homepage | default: "Webseite nicht verfügbar" }}
+    Email-Adresse: {{ entry.email | default: "Email nicht verfügbar" }}
+    Telefon: {{ entry.phone | default: "Telefon nicht verfügbar" }}
+
+{% unless forloop.last %}---------{% endunless %}
+{% endfor %}
+euphorische Grüße,
+das Karte von morgen-Team
+https://www.kartevonmorgen.org
+
+<p><small>Um sich abzumelden, klicken Sie auf <a href="{{ unsubscribe_link }}">diesen Link</a></small></p>
