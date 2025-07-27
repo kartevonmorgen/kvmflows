@@ -16,23 +16,25 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up application...")
     try:
         # Initialize database and ensure connection
-        initialize_database([SubscriptionModel])
+        await initialize_database([SubscriptionModel])
         logger.info("Database initialized successfully")
-        
+
         # Test database connection
         if db.is_connection_usable():
             logger.info("Database connection is active and usable")
         else:
-            logger.warning("Database connection is not usable, attempting to connect...")
+            logger.warning(
+                "Database connection is not usable, attempting to connect..."
+            )
             if db.is_closed():
                 db.connect()
             logger.info("Database connection established")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
         raise
-    
+
     yield
-    
+
     # Shutdown
     logger.info("Shutting down application...")
     try:

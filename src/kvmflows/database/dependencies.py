@@ -1,24 +1,23 @@
-from contextlib import contextmanager
-from typing import Generator
+from contextlib import asynccontextmanager
+from typing import Generator, AsyncGenerator
 from fastapi import Depends
 from peewee import PostgresqlDatabase
 from loguru import logger
 
-from src.kvmflows.config.config import config
-from src.kvmflows.database.db import db
+from src.kvmflows.database.db import db, async_db
 
 
-def ensure_database_connection() -> None:
+async def ensure_database_connection() -> None:
     """Ensure database connection is active and usable."""
     try:
         if db.is_closed():
             db.connect()
             logger.debug("Database connection opened")
-        
+
         # Test the connection
         db.execute_sql("SELECT 1")
         logger.debug("Database connection verified")
-        
+
     except Exception as e:
         logger.error(f"Database connection error: {e}")
         # Try to reconnect
@@ -32,13 +31,14 @@ def ensure_database_connection() -> None:
             raise
 
 
-@contextmanager
-def database_transaction():
+@asynccontextmanager
+async def database_transaction():
     """Context manager for database transactions."""
-    ensure_database_connection()
+    await ensure_database_connection()
     try:
-        with db.atomic():
-            yield db
+        # For peewee-async 1.1.0, we'll use a simpler approach
+        # Transaction management is handled by the AioModel itself
+        yield async_db
     except Exception as e:
         logger.error(f"Database transaction error: {e}")
         raise
@@ -47,18 +47,46 @@ def database_transaction():
 def get_db_connection() -> Generator[PostgresqlDatabase, None, None]:
     """FastAPI dependency for database connection with proper lifecycle management."""
     try:
-        ensure_database_connection()
+        # Use synchronous connection check for compatibility
+        if db.is_closed():
+            db.connect()
+
+        # Test the connection
+        db.execute_sql("SELECT 1")
         yield db
     except Exception as e:
         logger.error(f"Database dependency error: {e}")
         raise
 
 
+async def get_async_db_connection() -> AsyncGenerator[object, None]:
+    """FastAPI dependency for async database connection with proper lifecycle management."""
+    try:
+        await ensure_database_connection()
+        yield async_db
+    except Exception as e:
+        logger.error(f"Async database dependency error: {e}")
+        raise
+
+
+async def get_async_db_transaction() -> AsyncGenerator[object, None]:
+    """FastAPI dependency for async database connection with transaction support."""
+    try:
+        async with database_transaction() as db_conn:
+            yield db_conn
+    except Exception as e:
+        logger.error(f"Async database transaction dependency error: {e}")
+        raise
+
+
 def get_db_transaction() -> Generator[PostgresqlDatabase, None, None]:
     """FastAPI dependency for database connection with transaction support."""
     try:
-        with database_transaction() as db_conn:
-            yield db_conn
+        if db.is_closed():
+            db.connect()
+
+        with db.atomic():
+            yield db
     except Exception as e:
         logger.error(f"Database transaction dependency error: {e}")
         raise
@@ -67,3 +95,5 @@ def get_db_transaction() -> Generator[PostgresqlDatabase, None, None]:
 # Type annotations for the dependencies
 DatabaseDep = Depends(get_db_connection)
 DatabaseTransactionDep = Depends(get_db_transaction)
+AsyncDatabaseDep = Depends(get_async_db_connection)
+AsyncDatabaseTransactionDep = Depends(get_async_db_transaction)

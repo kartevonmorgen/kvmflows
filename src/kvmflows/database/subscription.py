@@ -1,9 +1,11 @@
-from peewee import CharField, FloatField, Model, DateTimeField, BooleanField, UUIDField, PostgresqlDatabase
-from datetime import datetime, timezone
 import uuid
-from typing import Dict, Any, Optional
 
-from src.kvmflows.database.db import db
+from peewee import CharField, FloatField, DateTimeField, BooleanField, UUIDField
+from peewee_async import AioModel
+from datetime import datetime, timezone
+from typing import Dict, Any
+
+from src.kvmflows.database.db import async_db
 from src.kvmflows.database.mixin.updated_at_trigger import UpdateAtTriggerMixin
 from src.kvmflows.models.subscription import Subscription
 from src.kvmflows.models.subscription_types import EntrySubscriptionType
@@ -14,7 +16,7 @@ def utc_now():
     return datetime.now(timezone.utc)
 
 
-class SubscriptionModel(Model, UpdateAtTriggerMixin):
+class SubscriptionModel(AioModel, UpdateAtTriggerMixin):
     id = UUIDField(primary_key=True, default=uuid.uuid4)
     title: CharField = CharField()
     email: CharField = CharField()
@@ -30,7 +32,7 @@ class SubscriptionModel(Model, UpdateAtTriggerMixin):
     updated_at: DateTimeField = DateTimeField(default=utc_now)
 
     class Meta:
-        database = db
+        database = async_db
         table_name = "subscriptions"
 
     @classmethod

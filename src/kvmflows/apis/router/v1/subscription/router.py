@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 from loguru import logger
@@ -7,6 +7,7 @@ from src.kvmflows.models.subscription_interval import SubscriptionInterval
 from src.kvmflows.models.subscription_types import EntrySubscriptionType
 from src.kvmflows.models.supported_languages import SupportedLanguages
 from src.kvmflows.database.subscription import SubscriptionModel
+from src.kvmflows.database.dependencies import get_async_db_connection
 
 
 router = APIRouter()
@@ -64,11 +65,12 @@ class SubscriptionResponse(BaseModel):
 )
 async def create_subscription(
     subscription: CreateSubscriptionRequest,
+    db=Depends(get_async_db_connection),
 ) -> SubscriptionResponse:
     logger.info(f"Creating subscription for email: {subscription.email}")
 
-    # Check for existing subscription
-    existing_subscription = SubscriptionModel.get_or_none(
+    # Check for existing subscription using async method
+    existing_subscription = await SubscriptionModel.aio_get_or_none(
         SubscriptionModel.email == subscription.email,
         SubscriptionModel.interval == subscription.interval,
         SubscriptionModel.lat_min == subscription.lat_min,
@@ -88,9 +90,9 @@ async def create_subscription(
             detail={"message": "Similar subscription already exists"},
         )
 
-    # Create new subscription
+    # Create new subscription using async method
     try:
-        subscription_instance = SubscriptionModel.create(
+        subscription_instance = await SubscriptionModel.aio_create(
             title=subscription.title,
             email=subscription.email,
             lat_min=subscription.lat_min,
@@ -119,8 +121,10 @@ async def create_subscription(
         lon_min=subscription_instance.lon_min,
         lat_max=subscription_instance.lat_max,
         lon_max=subscription_instance.lon_max,
-        interval=subscription_instance.interval,
-        subscription_type=subscription_instance.subscription_type,
+        interval=SubscriptionInterval(subscription_instance.interval),
+        subscription_type=EntrySubscriptionType(
+            subscription_instance.subscription_type
+        ),
         language=SupportedLanguages(subscription_instance.language),
         is_active=subscription_instance.is_active,
     )
@@ -129,8 +133,10 @@ async def create_subscription(
 
 
 @router.post("/subscriptions/{subscription_id}/unsubscribe")
-async def unsubscribe(subscription_id: str) -> SubscriptionResponse:
-    existing_subscription = SubscriptionModel.get_or_none(
+async def unsubscribe(
+    subscription_id: str, db=Depends(get_async_db_connection)
+) -> SubscriptionResponse:
+    existing_subscription = await SubscriptionModel.aio_get_or_none(
         SubscriptionModel.id == subscription_id
     )
     if not existing_subscription:
@@ -139,7 +145,7 @@ async def unsubscribe(subscription_id: str) -> SubscriptionResponse:
         )
 
     existing_subscription.is_active = False
-    existing_subscription.save()
+    await existing_subscription.aio_save()
 
     response = SubscriptionResponse(
         id=existing_subscription.id,
@@ -161,9 +167,11 @@ async def unsubscribe(subscription_id: str) -> SubscriptionResponse:
 
 
 @router.post("/subscriptions/{subscription_id}/activate")
-async def activate_subscription(subscription_id: str):
+async def activate_subscription(
+    subscription_id: str, db=Depends(get_async_db_connection)
+):
     """Activate a subscription by setting is_active=True."""
-    subscription = SubscriptionModel.get_or_none(
+    subscription = await SubscriptionModel.get_or_none_async(
         SubscriptionModel.id == subscription_id
     )
     if not subscription:
@@ -185,7 +193,7 @@ async def activate_subscription(subscription_id: str):
             is_active=subscription.is_active,
         )
     subscription.is_active = True
-    subscription.save()
+    await subscription.save_async()
     response = SubscriptionResponse(
         id=subscription.id,
         title=subscription.title,
