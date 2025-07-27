@@ -1,6 +1,6 @@
 from typing import List, Optional
 from datetime import datetime
-from pydantic import BaseModel 
+from pydantic import BaseModel, field_validator
 
 
 class Entry(BaseModel):
@@ -28,3 +28,10 @@ class Entry(BaseModel):
     categories: List[str]
     tags: List[str]
     ratings: Optional[List[str]] = None
+
+    @field_validator("founded_on", mode="before")
+    @classmethod
+    def founded_on_to_str(cls, v):
+        if v is None:
+            return v
+        return str(v)

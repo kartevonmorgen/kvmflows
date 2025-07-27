@@ -38,8 +38,8 @@ class BulkHttpClient:
                     result = res.json()
                 else:
                     result = {"text": res.text}
-                duration = time.time() - start_time
-                logger.debug(f"get_with_retries for {url} completed in {duration:.3f}s")
+                # duration = time.time() - start_time
+                # logger.debug(f"get_with_retries for {url} completed in {duration:.3f}s")
                 return result
             except httpx.HTTPStatusError as e:
                 logger.error(

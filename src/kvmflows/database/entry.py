@@ -1,4 +1,4 @@
-from peewee import CharField, FloatField, IntegerField, DateTimeField
+from peewee import CharField, TextField, FloatField, IntegerField, DateTimeField
 from peewee_async import AioModel
 from playhouse.postgres_ext import ArrayField
 from datetime import datetime, timezone
@@ -18,10 +18,10 @@ class Entry(AioModel, UpdateAtTriggerMixin):
     id = CharField(primary_key=True)
     created = DateTimeField()
     version = IntegerField()
-    title = CharField()
-    description = CharField()
-    lat = FloatField(constraints=[FloatField.constraints.between(-90, 90)])
-    lng = FloatField(constraints=[FloatField.constraints.between(-180, 180)])
+    title = TextField()  # Changed to TextField for longer titles
+    description = TextField()  # Changed to TextField for longer descriptions
+    lat = FloatField()
+    lng = FloatField()
     street = CharField(null=True)
     zip = CharField(null=True)
     city = CharField(null=True)
@@ -30,12 +30,12 @@ class Entry(AioModel, UpdateAtTriggerMixin):
     contact_name = CharField(null=True)
     email = CharField(null=True)
     telephone = CharField(null=True)
-    homepage = CharField(null=True)
-    opening_hours = CharField(null=True)
+    homepage = TextField(null=True)  # Changed to TextField for longer URLs
+    opening_hours = TextField(null=True)  # Changed to TextField for detailed schedules
     founded_on = CharField(null=True)
     license = CharField()
-    image_url = CharField(null=True)
-    image_link_url = CharField(null=True)
+    image_url = TextField(null=True)  # Changed to TextField for longer URLs
+    image_link_url = TextField(null=True)  # Changed to TextField for longer URLs
     categories = ArrayField(CharField)  # type: ignore
     tags = ArrayField(CharField)  # type: ignore
     ratings = ArrayField(CharField, null=True)  # type: ignore

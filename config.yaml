@@ -47,8 +47,14 @@ db:
   port: 5432
 
 areas:
-  - name: europe
-    lats: [43.9137, 55.3666]
-    lngs: [-5.8227, 20.1489]
-    lat_n_chunks: 25
-    lng_n_chunks: 25
+  # - name: europe
+  #   lats: [43.9137, 55.3666]
+  #   lngs: [-5.8227, 20.1489]
+  #   lat_n_chunks: 100
+  #   lng_n_chunks: 10
+
+  - name: stuttgart
+    lats: [48.74560313493273, 48.81940802557203]
+    lngs: [9.080886840820314, 9.247827529907228]
+    lat_n_chunks: 20
+    lng_n_chunks: 10
