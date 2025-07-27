@@ -46,7 +46,7 @@ class UpdateAtTriggerMixin:
         RETURNS TRIGGER AS $$
         BEGIN
           IF row_to_json(NEW)::text IS DISTINCT FROM row_to_json(OLD)::text THEN
-            NEW.updated_at = now();
+            NEW.updated_at = now() AT TIME ZONE 'UTC';
           END IF;
           RETURN NEW;
         END;
@@ -91,7 +91,7 @@ class UpdateAtTriggerMixin:
         RETURNS TRIGGER AS $$
         BEGIN
           IF row_to_json(NEW)::text IS DISTINCT FROM row_to_json(OLD)::text THEN
-            NEW.updated_at = now();
+            NEW.updated_at = now() AT TIME ZONE 'UTC';
           END IF;
           RETURN NEW;
         END;

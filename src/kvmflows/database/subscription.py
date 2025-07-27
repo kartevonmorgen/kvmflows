@@ -38,7 +38,7 @@ class SubscriptionModel(AioModel, UpdateAtTriggerMixin):
     @classmethod
     def from_pydantic(cls, subscription: Subscription) -> "SubscriptionModel":
         return cls(
-            id=subscription.id if subscription.id is not None else uuid.uuid4(),
+            id=subscription.id if subscription.id is not None else str(uuid.uuid4()),
             title=subscription.title,
             email=str(subscription.email),
             lat_min=subscription.lat_min,
@@ -52,7 +52,7 @@ class SubscriptionModel(AioModel, UpdateAtTriggerMixin):
 
     def to_pydantic(self) -> Subscription:
         return Subscription(
-            id=getattr(self, "id"),
+            id=str(getattr(self, "id")),
             title=getattr(self, "title"),
             email=getattr(self, "email"),
             lat_min=getattr(self, "lat_min"),

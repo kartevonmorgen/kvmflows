@@ -41,7 +41,6 @@ class AppConfig(BaseModel):
 class EmailMetadataConfig(BaseModel):
     sender: str
     subject: str
-    template: str
     unsubscribe_url: Optional[str] = None
     start_to_close_timeout_seconds: int
 

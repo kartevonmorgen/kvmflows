@@ -1,5 +1,5 @@
 # for entries with create time before this date, we will be skipped
-start_datetime: "2025-04-13T13:00:00.000000+00:00"
+start_datetime: "2025-07-27T23:11:33.007+00:00"
 
 kvm:
   base_url: "https://dev.kartevonmorgen.org"
@@ -26,11 +26,10 @@ email:
   retry_delay: 2
   concurrency: 10
   test_email_recipient: "navidkalaei@gmail.com" # email to send test emails to. is optional
-  unsubscribe_url: "https://dev.kartevonmorgen.org/workflows/v1/unsubscribe" # change this to the unsubscribe url of your app
+  unsubscribe_url: "/v1/subscriptions/{subscription_id}/unsubscribe" # change this to the unsubscribe url of your app
   area_subscription_creates:
       sender: "Kartevonmorgen <noreply@dev.kartevonmorgen.org>"
       subject: "New entry in your area"
-      template: "templates/{language}/area_subscription/creates/{interval}.liquid"
       start_to_close_timeout_seconds: 300
 
 ofdb:
