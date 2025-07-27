@@ -35,6 +35,9 @@ email:
 
 ofdb:
   url: https://dev.ofdb.io/v0
+  max_retries: 10
+  retry_delay: 5
+  concurrency: 10
 
 db:
   name: kvm

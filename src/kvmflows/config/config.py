@@ -61,6 +61,9 @@ class EmailConfig(BaseModel):
 class OfdbConfig(BaseModel):
     url: str
     limit: int = 2000
+    max_retries: int = 10
+    retry_delay: int = 5
+    concurrency: int = 10
 
 
 class DBConfig(BaseModel):

@@ -1,0 +1,202 @@
+from fastapi import APIRouter, HTTPException, status
+from pydantic import BaseModel, EmailStr
+from uuid import UUID
+from loguru import logger
+
+from src.kvmflows.models.subscription_interval import SubscriptionInterval
+from src.kvmflows.models.subscription_types import EntrySubscriptionType
+from src.kvmflows.models.supported_languages import SupportedLanguages
+from src.kvmflows.database.subscription import SubscriptionModel
+
+
+router = APIRouter()
+
+
+class CreateSubscriptionRequest(BaseModel):
+    title: str
+    email: EmailStr
+    lat_min: float
+    lon_min: float
+    lat_max: float
+    lon_max: float
+    interval: SubscriptionInterval
+    subscription_type: EntrySubscriptionType
+    language: SupportedLanguages
+
+
+class SubscriptionResponse(BaseModel):
+    id: UUID
+    title: str
+    email: EmailStr
+    lat_min: float
+    lon_min: float
+    lat_max: float
+    lon_max: float
+    interval: SubscriptionInterval
+    subscription_type: EntrySubscriptionType
+    language: SupportedLanguages
+    is_active: bool
+
+
+@router.post(
+    "/subscriptions",
+    responses={
+        status.HTTP_200_OK: {"description": "Subscription created successfully"},
+        status.HTTP_409_CONFLICT: {
+            "description": "Similar subscription already exists",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": {
+                            "message": "Similar subscription already exists",
+                            "subscription": {
+                                "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                            },
+                        }
+                    }
+                }
+            },
+        },
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {
+            "description": "Failed to create subscription"
+        },
+    },
+)
+async def create_subscription(
+    subscription: CreateSubscriptionRequest,
+) -> SubscriptionResponse:
+    logger.info(f"Creating subscription for email: {subscription.email}")
+
+    # Check for existing subscription
+    existing_subscription = SubscriptionModel.get_or_none(
+        SubscriptionModel.email == subscription.email,
+        SubscriptionModel.interval == subscription.interval,
+        SubscriptionModel.lat_min == subscription.lat_min,
+        SubscriptionModel.lon_min == subscription.lon_min,
+        SubscriptionModel.lat_max == subscription.lat_max,
+        SubscriptionModel.lon_max == subscription.lon_max,
+        SubscriptionModel.subscription_type == subscription.subscription_type.value,
+        SubscriptionModel.language == subscription.language.value,
+    )
+
+    if existing_subscription:
+        logger.warning(
+            f"Similar subscription already exists for email: {subscription.email}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail={"message": "Similar subscription already exists"},
+        )
+
+    # Create new subscription
+    try:
+        subscription_instance = SubscriptionModel.create(
+            title=subscription.title,
+            email=subscription.email,
+            lat_min=subscription.lat_min,
+            lon_min=subscription.lon_min,
+            lat_max=subscription.lat_max,
+            lon_max=subscription.lon_max,
+            interval=subscription.interval.value,
+            subscription_type=subscription.subscription_type.value,
+            language=subscription.language.value,
+            is_active=False,
+        )
+        logger.debug(f"Subscription created with ID: {subscription_instance.id}")
+
+    except Exception as e:
+        logger.error(f"Error creating subscription: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to create subscription",
+        )
+
+    response = SubscriptionResponse(
+        id=subscription_instance.id,
+        title=subscription_instance.title,
+        email=subscription_instance.email,
+        lat_min=subscription_instance.lat_min,
+        lon_min=subscription_instance.lon_min,
+        lat_max=subscription_instance.lat_max,
+        lon_max=subscription_instance.lon_max,
+        interval=subscription_instance.interval,
+        subscription_type=subscription_instance.subscription_type,
+        language=SupportedLanguages(subscription_instance.language),
+        is_active=subscription_instance.is_active,
+    )
+
+    return response
+
+
+@router.post("/subscriptions/{subscription_id}/unsubscribe")
+async def unsubscribe(subscription_id: str) -> SubscriptionResponse:
+    existing_subscription = SubscriptionModel.get_or_none(
+        SubscriptionModel.id == subscription_id
+    )
+    if not existing_subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+        )
+
+    existing_subscription.is_active = False
+    existing_subscription.save()
+
+    response = SubscriptionResponse(
+        id=existing_subscription.id,
+        title=existing_subscription.title,
+        email=existing_subscription.email,
+        lat_min=existing_subscription.lat_min,
+        lon_min=existing_subscription.lon_min,
+        lat_max=existing_subscription.lat_max,
+        lon_max=existing_subscription.lon_max,
+        interval=SubscriptionInterval(existing_subscription.interval),
+        subscription_type=EntrySubscriptionType(
+            existing_subscription.subscription_type
+        ),
+        language=SupportedLanguages(existing_subscription.language),
+        is_active=existing_subscription.is_active,
+    )
+
+    return response
+
+
+@router.post("/subscriptions/{subscription_id}/activate")
+async def activate_subscription(subscription_id: str):
+    """Activate a subscription by setting is_active=True."""
+    subscription = SubscriptionModel.get_or_none(
+        SubscriptionModel.id == subscription_id
+    )
+    if not subscription:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
+        )
+    if subscription.is_active:
+        return SubscriptionResponse(
+            id=subscription.id,
+            title=subscription.title,
+            email=subscription.email,
+            lat_min=subscription.lat_min,
+            lon_min=subscription.lon_min,
+            lat_max=subscription.lat_max,
+            lon_max=subscription.lon_max,
+            interval=SubscriptionInterval(subscription.interval),
+            subscription_type=EntrySubscriptionType(subscription.subscription_type),
+            language=SupportedLanguages(subscription.language),
+            is_active=subscription.is_active,
+        )
+    subscription.is_active = True
+    subscription.save()
+    response = SubscriptionResponse(
+        id=subscription.id,
+        title=subscription.title,
+        email=subscription.email,
+        lat_min=subscription.lat_min,
+        lon_min=subscription.lon_min,
+        lat_max=subscription.lat_max,
+        lon_max=subscription.lon_max,
+        interval=SubscriptionInterval(subscription.interval),
+        subscription_type=EntrySubscriptionType(subscription.subscription_type),
+        language=SupportedLanguages(subscription.language),
+        is_active=subscription.is_active,
+    )
+    return response
