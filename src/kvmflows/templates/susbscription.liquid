@@ -27,7 +27,7 @@ Es gab {{ count }} neue Einträge für dein Abo "{{ subscription.title }}"
 {%- endif -%}
 {% endif %}
 {% for entry in entries %}
-{{ entry.title }} [<a href="https://{{ domain }}/m/main/e/{{ entry.id }}">Link zum Eintrag</a>] ({{ entry.category | default: "Kategorie nicht verfügbar" }}) 
+<a href="https://{{ domain }}/m/main/e/{{ entry.id }}">{{ entry.title }}</a>
     {{ entry.description }}
     Tags: {{ entry.tags | default: "Keine Tags" }}
     Adresse: {{ entry.address_line | default: "Adresse nicht verfügbar" }}
