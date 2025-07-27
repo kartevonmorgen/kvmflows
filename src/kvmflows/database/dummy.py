@@ -35,7 +35,7 @@ if __name__ == "__main__":
                 DummyModel.name == "Test Dummy Async"
             )
             if dummy:
-                dummy.array_field = ["item1", "item2", "item3"]
+                dummy.array_field = ["item1", "item2", "item3"]  # type: ignore
                 await dummy.aio_save()
                 print(f"Updated: {dummy}")
 

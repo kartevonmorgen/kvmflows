@@ -8,6 +8,7 @@ from src.kvmflows.config.config import config
 from src.kvmflows.apis.router.router import router
 from src.kvmflows.database.db import initialize_database, db
 from src.kvmflows.database.subscription import SubscriptionModel
+from src.kvmflows.database.entry import Entry
 
 
 @asynccontextmanager
@@ -16,7 +17,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting up application...")
     try:
         # Initialize database and ensure connection
-        await initialize_database([SubscriptionModel])
+        await initialize_database([SubscriptionModel, Entry])
         logger.info("Database initialized successfully")
 
         # Test database connection

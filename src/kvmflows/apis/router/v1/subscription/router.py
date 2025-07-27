@@ -113,21 +113,7 @@ async def create_subscription(
             detail="Failed to create subscription",
         )
 
-    response = SubscriptionResponse(
-        id=subscription_instance.id,
-        title=subscription_instance.title,
-        email=subscription_instance.email,
-        lat_min=subscription_instance.lat_min,
-        lon_min=subscription_instance.lon_min,
-        lat_max=subscription_instance.lat_max,
-        lon_max=subscription_instance.lon_max,
-        interval=SubscriptionInterval(subscription_instance.interval),
-        subscription_type=EntrySubscriptionType(
-            subscription_instance.subscription_type
-        ),
-        language=SupportedLanguages(subscription_instance.language),
-        is_active=subscription_instance.is_active,
-    )
+    response = subscription_instance.to_subscription_response()
 
     return response
 
@@ -144,24 +130,11 @@ async def unsubscribe(
             status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
         )
 
-    existing_subscription.is_active = False
+    # Update the is_active field using the helper method
+    existing_subscription.set_active(False)
     await existing_subscription.aio_save()
 
-    response = SubscriptionResponse(
-        id=existing_subscription.id,
-        title=existing_subscription.title,
-        email=existing_subscription.email,
-        lat_min=existing_subscription.lat_min,
-        lon_min=existing_subscription.lon_min,
-        lat_max=existing_subscription.lat_max,
-        lon_max=existing_subscription.lon_max,
-        interval=SubscriptionInterval(existing_subscription.interval),
-        subscription_type=EntrySubscriptionType(
-            existing_subscription.subscription_type
-        ),
-        language=SupportedLanguages(existing_subscription.language),
-        is_active=existing_subscription.is_active,
-    )
+    response = existing_subscription.to_subscription_response()
 
     return response
 
@@ -171,40 +144,16 @@ async def activate_subscription(
     subscription_id: str, db=Depends(get_async_db_connection)
 ):
     """Activate a subscription by setting is_active=True."""
-    subscription = await SubscriptionModel.get_or_none_async(
+    subscription = await SubscriptionModel.aio_get_or_none(
         SubscriptionModel.id == subscription_id
     )
     if not subscription:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
         )
-    if subscription.is_active:
-        return SubscriptionResponse(
-            id=subscription.id,
-            title=subscription.title,
-            email=subscription.email,
-            lat_min=subscription.lat_min,
-            lon_min=subscription.lon_min,
-            lat_max=subscription.lat_max,
-            lon_max=subscription.lon_max,
-            interval=SubscriptionInterval(subscription.interval),
-            subscription_type=EntrySubscriptionType(subscription.subscription_type),
-            language=SupportedLanguages(subscription.language),
-            is_active=subscription.is_active,
-        )
-    subscription.is_active = True
-    await subscription.save_async()
-    response = SubscriptionResponse(
-        id=subscription.id,
-        title=subscription.title,
-        email=subscription.email,
-        lat_min=subscription.lat_min,
-        lon_min=subscription.lon_min,
-        lat_max=subscription.lat_max,
-        lon_max=subscription.lon_max,
-        interval=SubscriptionInterval(subscription.interval),
-        subscription_type=EntrySubscriptionType(subscription.subscription_type),
-        language=SupportedLanguages(subscription.language),
-        is_active=subscription.is_active,
-    )
+    if subscription.get_is_active():
+        return subscription.to_subscription_response()
+    subscription.set_active(True)
+    await subscription.aio_save()
+    response = subscription.to_subscription_response()
     return response

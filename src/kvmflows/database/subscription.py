@@ -78,3 +78,34 @@ class SubscriptionModel(AioModel, UpdateAtTriggerMixin):
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
+
+    def to_subscription_response(self):
+        """Convert to SubscriptionResponse model for API responses."""
+        from src.kvmflows.models.subscription_interval import SubscriptionInterval
+        from src.kvmflows.models.subscription_types import EntrySubscriptionType
+        from src.kvmflows.models.supported_languages import SupportedLanguages
+
+        # Import here to avoid circular imports
+        from src.kvmflows.apis.router.v1.subscription.router import SubscriptionResponse
+
+        return SubscriptionResponse(
+            id=self.id,  # type: ignore
+            title=self.title,  # type: ignore
+            email=self.email,  # type: ignore
+            lat_min=self.lat_min,  # type: ignore
+            lon_min=self.lon_min,  # type: ignore
+            lat_max=self.lat_max,  # type: ignore
+            lon_max=self.lon_max,  # type: ignore
+            interval=SubscriptionInterval(self.interval),  # type: ignore
+            subscription_type=EntrySubscriptionType(self.subscription_type),  # type: ignore
+            language=SupportedLanguages(self.language),  # type: ignore
+            is_active=self.is_active,  # type: ignore
+        )
+
+    def set_active(self, active: bool):
+        """Set the is_active status."""
+        setattr(self, "is_active", active)
+
+    def get_is_active(self) -> bool:
+        """Get the is_active status."""
+        return getattr(self, "is_active")
