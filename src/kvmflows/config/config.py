@@ -41,7 +41,6 @@ class AppConfig(BaseModel):
 class EmailMetadataConfig(BaseModel):
     sender: str
     subject: str
-    unsubscribe_url: Optional[str] = None
     start_to_close_timeout_seconds: int
 
 
@@ -49,6 +48,7 @@ class EmailConfig(BaseModel):
     domain: str
     api_key: str
     url: str
+    unsubscribe_url: str 
     rate_limit: int
     max_retries: int
     retry_delay: int

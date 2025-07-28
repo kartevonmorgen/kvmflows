@@ -26,7 +26,7 @@ email:
   retry_delay: 2
   concurrency: 10
   test_email_recipient: "navidkalaei@gmail.com" # email to send test emails to. is optional
-  unsubscribe_url: "/v1/subscriptions/{subscription_id}/unsubscribe" # change this to the unsubscribe url of your app
+  unsubscribe_url: "http://localhost:8000/v1/subscriptions/{subscription_id}/unsubscribe" # change this to the unsubscribe url of your app
   area_subscription_creates:
       sender: "Kartevonmorgen <noreply@dev.kartevonmorgen.org>"
       subject: "New entry in your area"

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Response
 from pydantic import BaseModel, EmailStr
 from uuid import UUID
 from loguru import logger
@@ -118,10 +118,10 @@ async def create_subscription(
     return response
 
 
-@router.post("/subscriptions/{subscription_id}/unsubscribe")
+@router.get("/subscriptions/{subscription_id}/unsubscribe")
 async def unsubscribe(
     subscription_id: str, db=Depends(get_async_db_connection)
-) -> SubscriptionResponse:
+) -> Response:
     existing_subscription = await SubscriptionModel.aio_get_or_none(
         SubscriptionModel.id == subscription_id
     )
@@ -134,16 +134,24 @@ async def unsubscribe(
     existing_subscription.set_active(False)
     await existing_subscription.aio_save()
 
-    response = existing_subscription.to_subscription_response()
+    return Response(
+        content="""
+            <html>
+                <head><title>Unsubscribed</title></head>
+                <body>
+                    <h2>You are unsubscribed successfully!</h2>
+                </body>
+            </html>
+        """,
+        media_type="text/html",
+    )
 
-    return response
 
-
-@router.post("/subscriptions/{subscription_id}/activate")
+@router.get("/subscriptions/{subscription_id}/activate")
 async def activate_subscription(
     subscription_id: str, db=Depends(get_async_db_connection)
 ):
-    """Activate a subscription by setting is_active=True."""
+    """Activate a subscription by setting is_active=True and return an HTML confirmation."""
     subscription = await SubscriptionModel.aio_get_or_none(
         SubscriptionModel.id == subscription_id
     )
@@ -152,8 +160,27 @@ async def activate_subscription(
             status_code=status.HTTP_404_NOT_FOUND, detail="Subscription not found"
         )
     if subscription.get_is_active():
-        return subscription.to_subscription_response()
+        return Response(
+            content="""
+                <html>
+                    <head><title>Subscription Activated</title></head>
+                    <body>
+                        <h2>Your subscription is already active.</h2>
+                    </body>
+                </html>
+            """,
+            media_type="text/html",
+        )
     subscription.set_active(True)
     await subscription.aio_save()
-    response = subscription.to_subscription_response()
-    return response
+    return Response(
+        content="""
+            <html>
+                <head><title>Subscription Activated</title></head>
+                <body>
+                    <h2>Your subscription is activated successfully!</h2>
+                </body>
+            </html>
+        """,
+        media_type="text/html",
+    )

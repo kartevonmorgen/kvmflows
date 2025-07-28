@@ -11,7 +11,6 @@ This module handles the complete flow of:
 from pathlib import Path
 from typing import List
 from datetime import datetime
-
 from loguru import logger
 from liquid import Template
 
@@ -204,8 +203,8 @@ async def fetch_entries_for_subscription(subscription: Subscription) -> List[Ent
                 & (
                     EntryModel.updated_at.is_null(False)
                 )  # Ensure updated_at is not null
-                & (EntryModel.updated_at >= interval_datetimes.start_datetime)
-                & (EntryModel.updated_at < interval_datetimes.end_datetime)
+                # & (EntryModel.updated_at >= interval_datetimes.start_datetime)
+                # & (EntryModel.updated_at < interval_datetimes.end_datetime)
             )
         )
 
@@ -329,7 +328,9 @@ def _create_email_message(
         entries=entries,
         interval=subscription.interval,
         domain=config.email.domain,
-        unsubscribe_link=f"{config.email.area_subscription_creates.unsubscribe_url}/{subscription.id}",
+        unsubscribe_link=config.email.unsubscribe_url.format(
+            subscription_id=subscription.id
+        ),
     )
 
     # Create and return the email message
@@ -504,7 +505,7 @@ def _test_complete_flow():
 
 if __name__ == "__main__":
     # Test template rendering with mock data
-    _test_template_rendering()
+    # _test_template_rendering()
 
     # Uncomment the line below to test the complete flow (will send actual emails)
-    # _test_complete_flow()
+    _test_complete_flow()
