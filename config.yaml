@@ -8,7 +8,7 @@ kvm:
 app:
   title: "kartevonmorgen workflows"
   host: "0.0.0.0"
-  port: 7921
+  port: 7921 
   cors:
     allowed_origins: ["*"]
     allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
@@ -48,7 +48,7 @@ db:
   name: kvm
   user: postgres
   password: REMOVED_SECRET
-  host: localhost
+  host: db
   port: 5432
 
 crons:

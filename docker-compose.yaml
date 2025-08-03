@@ -5,14 +5,37 @@ services:
     expose:
       - 5432
     ports:
-      - '5432:5432'
+      - "5432:5432"
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=REMOVED_SECRET
     volumes:
       - ./init_pg_dbs.sql:/docker-entrypoint-initdb.d/init_pg_dbs.sql
+    networks:
+      - app_network
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
+  
+  x-api-service-base: &api-service-base
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    networks:
+      - app_network
+    volumes:
+      - ./config.yaml:/app/config.yaml
+  
+  api:
+    <<: *api-service-base
+    container_name: api_container
+    ports:
+      - "7921:7921"
+    command: poetry run python /app/src/kvmflows/apis/server.py
+
+networks:
+  app_network:
+    driver: bridge
