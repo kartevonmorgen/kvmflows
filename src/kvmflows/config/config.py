@@ -53,6 +53,7 @@ class EmailConfig(BaseModel):
     api_key: str
     url: str
     unsubscribe_url: str
+    activation_url: str
     rate_limit: int
     max_retries: int
     retry_delay: int

@@ -26,17 +26,17 @@ async def send_activation_email(
         subscription_id: The unique ID of the subscription
         email: Email address of the subscriber
         subscription_title: Title of the subscription
-        base_url: Base URL for the activation link. If None, defaults to localhost with app port
+        base_url: Base URL for the activation link. If None, uses config.email.activation_url
 
     Returns:
         bool: True if email was sent successfully, False otherwise
     """
     try:
-        # Construct activation link
+        # Construct activation link using config URL pattern
         if base_url is None:
-            base_url = f"http://localhost:{config.app.port}"
-
-        activation_link = f"{base_url}/v1/subscriptions/{subscription_id}/activate"
+            activation_link = config.email.activation_url.format(subscription_id=subscription_id)
+        else:
+            activation_link = f"{base_url}/{subscription_id}/activate"
 
         # Render the activation email template
         html_content = render_activation_template(

@@ -5,7 +5,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
 
-from kvmflows.flows.sync_entires import sync_entries
+from src.kvmflows.flows.sync_entires import sync_entries
 from src.kvmflows.config.config import config
 
 
