@@ -14,5 +14,5 @@ RUN poetry config virtualenvs.create false
 
 RUN poetry install --no-root --no-interaction --no-ansi
 
-ENV PYTHONPATH /app
-ENV PYTHONBUFFERED 1
+ENV PYTHONPATH=/app
+ENV PYTHONBUFFERED=1
