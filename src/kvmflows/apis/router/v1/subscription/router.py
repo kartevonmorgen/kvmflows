@@ -8,6 +8,7 @@ from src.kvmflows.models.subscription_types import EntrySubscriptionType
 from src.kvmflows.models.supported_languages import SupportedLanguages
 from src.kvmflows.database.subscription import SubscriptionModel
 from src.kvmflows.database.dependencies import get_async_db_connection
+from src.kvmflows.mail.activation import send_activation_email
 
 
 router = APIRouter()
@@ -105,6 +106,23 @@ async def create_subscription(
             is_active=False,
         )
         logger.debug(f"Subscription created with ID: {subscription_instance.id}")
+
+        # Send activation email
+        try:
+            email_sent = await send_activation_email(
+                subscription_id=str(subscription_instance.id),
+                email=subscription.email,
+                subscription_title=subscription.title,
+            )
+            if email_sent:
+                logger.info(f"Activation email sent to {subscription.email}")
+            else:
+                logger.warning(
+                    f"Failed to send activation email to {subscription.email}"
+                )
+        except Exception as email_error:
+            logger.error(f"Error sending activation email: {email_error}")
+            # Continue with response even if email fails
 
     except Exception as e:
         logger.error(f"Error creating subscription: {e}")

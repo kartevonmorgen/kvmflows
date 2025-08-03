@@ -41,20 +41,26 @@ class AppConfig(BaseModel):
 class EmailMetadataConfig(BaseModel):
     sender: str
     subject: str
-    start_to_close_timeout_seconds: int
+
+
+class EmailTemplatesConfig(BaseModel):
+    activation_email: str
+    subscription_email: str
 
 
 class EmailConfig(BaseModel):
     domain: str
     api_key: str
     url: str
-    unsubscribe_url: str 
+    unsubscribe_url: str
     rate_limit: int
     max_retries: int
     retry_delay: int
     concurrency: int
     test_email_recipient: Optional[str] = None
+    templates: EmailTemplatesConfig
     area_subscription_creates: EmailMetadataConfig
+    subscription_activation: EmailMetadataConfig
 
 
 class OfdbConfig(BaseModel):

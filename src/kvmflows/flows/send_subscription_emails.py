@@ -47,8 +47,8 @@ def render_subscription_template(
     Raises:
         FileNotFoundError: If the template file doesn't exist
     """
-    # Locate the email template file
-    template_path = Path(__file__).parent.parent / "templates" / "susbscription.liquid"
+    # Get the template path from config instead of hardcoded path
+    template_path = Path(config.email.templates.subscription_email)
 
     if not template_path.exists():
         raise FileNotFoundError(f"Template not found at {template_path}")
