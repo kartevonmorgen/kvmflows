@@ -26,7 +26,6 @@ def async_job_wrapper(coro_func, job_name="async job"):
             logger.error(f"Error in scheduled {job_name}: {e}")
         finally:
             # Force garbage collection to prevent memory leaks
-
             gc.collect()
 
     return wrapper
