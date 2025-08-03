@@ -51,6 +51,15 @@ class MailgunSender:
             self._async_client = httpx.AsyncClient()
         return self._async_client
 
+    async def __aenter__(self):
+        """Async context manager entry"""
+        await self._get_async_client()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit with proper cleanup"""
+        await self.close_async()
+
     def _apply_rate_limit(self):
         """Simple rate limiting mechanism"""
         current_time = time.time()
@@ -113,8 +122,10 @@ class MailgunSender:
         if message.html:
             data["html"] = message.html
         if message.unsubscribe_link:
-            data["h:List-Unsubscribe"] = message.unsubscribe_link  # Add unsubscribe header
-            
+            data["h:List-Unsubscribe"] = (
+                message.unsubscribe_link
+            )  # Add unsubscribe header
+
         response: Optional[Dict[str, Any]] = None
         for attempt in range(self.max_retries):
             try:
@@ -142,7 +153,7 @@ class MailgunSender:
                 if attempt + 1 == self.max_retries:
                     raise
             await asyncio.sleep(self.retry_delay * (attempt + 1))  # Exponential backoff
-        
+
         return cast(dict, response)
 
     async def send_bulk_emails(
@@ -183,9 +194,11 @@ async def test_send_email_async(sender: str, to: str, subject: str, text: str):
         to=to,
         subject=subject,
         # text=text
-        html='<h1>Hello</h1><p>Hello, World!</p><a href="https://google.com">Unsubscribe</a>'
+        html='<h1>Hello</h1><p>Hello, World!</p><a href="https://google.com">Unsubscribe</a>',
     )
-    mail_sender = MailgunSender(domain=config.email.domain, api_key=config.email.api_key)
+    mail_sender = MailgunSender(
+        domain=config.email.domain, api_key=config.email.api_key
+    )
     try:
         result = await mail_sender.send_email_async(message)
         logger.info(f"Email sent: {result}")
@@ -223,16 +236,17 @@ if __name__ == "__main__":
     if recipient is None:
         logger.error("Please set the test_email_recipient in the config")
         exit(1)
-    
+
     # Single email example
     # test_send_email(config.email.area_subscription.sender, recipient, "Hello", "Hello, World!")
 
     # Asynchronous ingle email example
-    asyncio.run(test_send_email_async(
-        config.email.area_subscription_creates.sender,
-        recipient,
-        "Hello",
-        "Hello, World!",
+    asyncio.run(
+        test_send_email_async(
+            config.email.area_subscription_creates.sender,
+            recipient,
+            "Hello",
+            "Hello, World!",
         )
     )
 

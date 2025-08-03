@@ -1,7 +1,10 @@
 import asyncio
+import gc
+
 from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.cron import CronTrigger
 from loguru import logger
+
 from src.kvmflows.flows.update_entires import update_entries
 
 
@@ -15,10 +18,29 @@ def async_job_wrapper(coro_func, job_name="async job"):
 
     def wrapper():
         logger.info(f"Starting scheduled {job_name}...")
-        asyncio.run(coro_func())
-        logger.info(f"Scheduled {job_name} completed.")
+        # Use try-finally to ensure proper cleanup
+        try:
+            asyncio.run(coro_func())
+            logger.info(f"Scheduled {job_name} completed.")
+        except Exception as e:
+            logger.error(f"Error in scheduled {job_name}: {e}")
+        finally:
+            # Force garbage collection to prevent memory leaks
+
+            gc.collect()
 
     return wrapper
+
+
+async def wait_and_print(seconds):
+    """
+    Example async function that simulates a delay.
+    Args:
+        seconds: Number of seconds to wait
+    """
+    logger.info(f"Waiting for {seconds} seconds...")
+    await asyncio.sleep(seconds)
+    logger.info(f"Waited for {seconds} seconds.")
 
 
 def run_cron():
@@ -34,13 +56,19 @@ def run_cron():
         CronTrigger(hour=0, minute=0),
     )
 
-    scheduler.add_job(
-        async_job_wrapper(
-            lambda: update_entries(),
-            job_name="update_entries with params",
-        ),
-        CronTrigger(hour=1, minute=0),
-    )
+    # scheduler.add_job(
+    #     async_job_wrapper(
+    #         lambda: update_entries(),
+    #         job_name="update_entries with params",
+    #     ),
+    #     CronTrigger(hour=1, minute=0),
+    # )
+
+    # Remove the high-frequency test job that runs every second
+    # scheduler.add_job(
+    #     async_job_wrapper(lambda: wait_and_print(0.5), job_name="wait_and_print job"),
+    #     CronTrigger(second="*"),
+    # )
 
     logger.info("Scheduler started. update_entries will run daily at midnight UTC.")
     logger.info(

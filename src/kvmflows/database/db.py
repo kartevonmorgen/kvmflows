@@ -30,7 +30,7 @@ async_db = peewee_async.PooledPostgresqlDatabase(
     password=config.db.password,
     host=config.db.host,
     port=config.db.port,
-    max_connections=1,  # Use single connection to avoid Windows issues
+    max_connections=5,  # Increase to handle concurrent operations
     min_connections=1,
 )
 

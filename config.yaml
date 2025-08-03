@@ -28,15 +28,15 @@ email:
   test_email_recipient: "navidkalaei@gmail.com" # email to send test emails to. is optional
   unsubscribe_url: "http://localhost:8000/v1/subscriptions/{subscription_id}/unsubscribe" # change this to the unsubscribe url of your app
   area_subscription_creates:
-      sender: "Kartevonmorgen <noreply@dev.kartevonmorgen.org>"
-      subject: "New entry in your area"
-      start_to_close_timeout_seconds: 300
+    sender: "Kartevonmorgen <noreply@dev.kartevonmorgen.org>"
+    subject: "New entry in your area"
+    start_to_close_timeout_seconds: 300
 
 ofdb:
   url: https://dev.ofdb.io/v0
   max_retries: 10
   retry_delay: 5
-  concurrency: 10
+  concurrency: 15 # Reduced from 30 to avoid 503 errors
 
 db:
   name: kvm
@@ -46,14 +46,86 @@ db:
   port: 5432
 
 areas:
-  # - name: europe
-  #   lats: [43.9137, 55.3666]
-  #   lngs: [-5.8227, 20.1489]
-  #   lat_n_chunks: 100
-  #   lng_n_chunks: 10
-
   - name: stuttgart
     lats: [48.74560313493273, 48.81940802557203]
     lngs: [9.080886840820314, 9.247827529907228]
     lat_n_chunks: 20
     lng_n_chunks: 10
+
+  # - name: berlin
+  #   lats: [52.3383, 52.6755]
+  #   lngs: [13.0884, 13.7611]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: hamburg
+  #   lats: [53.3950, 53.9646]
+  #   lngs: [9.7576, 10.3256]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: munich
+  #   lats: [48.0616, 48.2485]
+  #   lngs: [11.3600, 11.7229]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: cologne
+  #   lats: [50.8300, 51.0847]
+  #   lngs: [6.7724, 7.1621]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: frankfurt
+  #   lats: [50.0272, 50.2276]
+  #   lngs: [8.4696, 8.8005]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: dusseldorf
+  #   lats: [51.1642, 51.3126]
+  #   lngs: [6.6879, 6.9003]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: leipzig
+  #   lats: [51.2672, 51.4156]
+  #   lngs: [12.2378, 12.5532]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: dortmund
+  #   lats: [51.4416, 51.5707]
+  #   lngs: [7.3346, 7.5906]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: essen
+  #   lats: [51.3837, 51.4871]
+  #   lngs: [6.9370, 7.0857]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: bremen
+  #   lats: [53.0115, 53.2206]
+  #   lngs: [8.6141, 8.9586]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: dresden
+  #   lats: [51.0000, 51.1500]
+  #   lngs: [13.6000, 13.9000]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: hanover
+  #   lats: [52.2861, 52.4472]
+  #   lngs: [9.6167, 9.8333]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10
+
+  # - name: nuremberg
+  #   lats: [49.3500, 49.5500]
+  #   lngs: [11.0000, 11.2000]
+  #   lat_n_chunks: 20
+  #   lng_n_chunks: 10

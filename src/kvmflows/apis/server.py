@@ -9,6 +9,10 @@ from src.kvmflows.apis.router.router import router
 from src.kvmflows.database.db import initialize_database, db
 from src.kvmflows.database.subscription import SubscriptionModel
 from src.kvmflows.database.entry import Entry
+from src.kvmflows.database.connection_manager import (
+    initialize_connection_manager,
+    shutdown_connection_manager,
+)
 
 
 @asynccontextmanager
@@ -16,6 +20,9 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting up application...")
     try:
+        # Initialize connection manager first
+        await initialize_connection_manager()
+
         # Initialize database and ensure connection
         await initialize_database([SubscriptionModel, Entry])
         logger.info("Database initialized successfully")
@@ -39,6 +46,9 @@ async def lifespan(app: FastAPI):
     # Shutdown
     logger.info("Shutting down application...")
     try:
+        # Shutdown connection manager
+        await shutdown_connection_manager()
+
         if not db.is_closed():
             db.close()
             logger.info("Database connection closed")
