@@ -14,10 +14,10 @@ from src.kvmflows.models.entries import Entry as PydanticEntry
 from src.kvmflows.utils.memory_monitor import monitor_memory
 
 
-@monitor_memory("update_entries")
-async def update_entries():
+@monitor_memory("sync_entries")
+async def sync_entries():
     """
-    Update entries by fetching data from OFDB and upserting to the database.
+    Sync entries by fetching data from OFDB and upserting to the database.
     """
 
     start_time = time.time()
@@ -317,5 +317,5 @@ if __name__ == "__main__":
     import asyncio
 
     logger.info("Starting entry update process")
-    asyncio.run(update_entries())
+    asyncio.run(sync_entries())
     logger.info("Entry update process completed")

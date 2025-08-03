@@ -50,6 +50,13 @@ db:
   host: localhost
   port: 5432
 
+crons:
+  sync_entries:
+    enabled: true
+    trigger:
+      hour: 0
+      minute: 0 
+
 areas:
   - name: stuttgart
     lats: [48.74560313493273, 48.81940802557203]

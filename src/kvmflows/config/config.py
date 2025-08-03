@@ -2,8 +2,8 @@ import hydra
 
 from datetime import datetime
 from omegaconf import OmegaConf
-from pydantic import BaseModel
-from typing import List, Optional, Tuple
+from pydantic import BaseModel, Field
+from typing import List, Optional, Tuple, Union
 from rich import print
 
 
@@ -79,12 +79,36 @@ class DBConfig(BaseModel):
     port: int
 
 
+class CronTriggerModel(BaseModel):
+    year: Optional[Union[str, int]] = Field(None, description="Year to run the job")
+    month: Optional[Union[str, int]] = Field(None, description="Month to run the job")
+    day: Optional[Union[str, int]] = Field(None, description="Day of the month to run the job")
+    week: Optional[Union[str, int]] = Field(None, description="Week of the year to run the job")
+    day_of_week: Optional[Union[str, int]] = Field(None, description="Day of the week to run the job")
+    hour: Optional[Union[str, int]] = Field(None, description="Hour to run the job")
+    minute: Optional[Union[str, int]] = Field(None, description="Minute to run the job")
+    second: Optional[Union[str, int]] = Field(None, description="Second to run the job")
+    start_date: Optional[str] = Field(None, description="Earliest possible date/time to run the job")
+    end_date: Optional[str] = Field(None, description="Latest possible date/time to run the job")
+    timezone: Optional[str] = Field(None, description="Timezone to use for the date/time calculations")
+
+
+class CronConfig(BaseModel):
+    enabled: bool = True
+    trigger: CronTriggerModel
+
+
+class CronsConfig(BaseModel):
+    sync_entries: CronConfig 
+
+
 class Config(BaseModel):
     start_datetime: datetime
     app: AppConfig
     email: EmailConfig
     ofdb: OfdbConfig
     db: DBConfig
+    crons: CronsConfig
     areas: List[Area]
 
 
@@ -92,6 +116,7 @@ hydra.initialize(version_base=None, config_path="../../..")
 cfg = hydra.compose("config")
 resolved_cfg = OmegaConf.to_container(cfg, resolve=True)
 config = Config.model_validate(resolved_cfg)
+
 
 if __name__ == "__main__":
     print(config)
