@@ -83,15 +83,27 @@ class DBConfig(BaseModel):
 class CronTriggerModel(BaseModel):
     year: Optional[Union[str, int]] = Field(None, description="Year to run the job")
     month: Optional[Union[str, int]] = Field(None, description="Month to run the job")
-    day: Optional[Union[str, int]] = Field(None, description="Day of the month to run the job")
-    week: Optional[Union[str, int]] = Field(None, description="Week of the year to run the job")
-    day_of_week: Optional[Union[str, int]] = Field(None, description="Day of the week to run the job")
+    day: Optional[Union[str, int]] = Field(
+        None, description="Day of the month to run the job"
+    )
+    week: Optional[Union[str, int]] = Field(
+        None, description="Week of the year to run the job"
+    )
+    day_of_week: Optional[Union[str, int]] = Field(
+        None, description="Day of the week to run the job"
+    )
     hour: Optional[Union[str, int]] = Field(None, description="Hour to run the job")
     minute: Optional[Union[str, int]] = Field(None, description="Minute to run the job")
     second: Optional[Union[str, int]] = Field(None, description="Second to run the job")
-    start_date: Optional[str] = Field(None, description="Earliest possible date/time to run the job")
-    end_date: Optional[str] = Field(None, description="Latest possible date/time to run the job")
-    timezone: Optional[str] = Field(None, description="Timezone to use for the date/time calculations")
+    start_date: Optional[str] = Field(
+        None, description="Earliest possible date/time to run the job"
+    )
+    end_date: Optional[str] = Field(
+        None, description="Latest possible date/time to run the job"
+    )
+    timezone: Optional[str] = Field(
+        None, description="Timezone to use for the date/time calculations"
+    )
 
 
 class CronConfig(BaseModel):
@@ -100,7 +112,7 @@ class CronConfig(BaseModel):
 
 
 class CronsConfig(BaseModel):
-    sync_entries: CronConfig 
+    sync_entries: CronConfig
 
 
 class Config(BaseModel):

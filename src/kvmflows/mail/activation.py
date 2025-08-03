@@ -34,7 +34,9 @@ async def send_activation_email(
     try:
         # Construct activation link using config URL pattern
         if base_url is None:
-            activation_link = config.email.activation_url.format(subscription_id=subscription_id)
+            activation_link = config.email.activation_url.format(
+                subscription_id=subscription_id
+            )
         else:
             activation_link = f"{base_url}/{subscription_id}/activate"
 
