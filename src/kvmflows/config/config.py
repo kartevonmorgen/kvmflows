@@ -113,6 +113,9 @@ class CronConfig(BaseModel):
 
 class CronsConfig(BaseModel):
     sync_entries: CronConfig
+    send_subscription_emails_daily: CronConfig
+    send_subscription_emails_weekly: CronConfig
+    send_subscription_emails_monthly: CronConfig
 
 
 class Config(BaseModel):

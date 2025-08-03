@@ -27,7 +27,7 @@ email:
   concurrency: 10
   test_email_recipient: "navidkalaei@gmail.com" # email to send test emails to. is optional
   unsubscribe_url: "http://localhost:8000/v1/subscriptions/{subscription_id}/unsubscribe" # change this to the unsubscribe url of your app
-  activation_url: "http://localhost:7921/workflows/v1/subscriptions/{subscription_id}/activate" # URL pattern for subscription activation links
+  activation_url: "http://localhost:8000/workflows/v1/subscriptions/{subscription_id}/activate" # URL pattern for subscription activation links
   templates:
     activation_email: "src/kvmflows/templates/activate_subscription.liquid"
     subscription_email: "src/kvmflows/templates/susbscription.liquid"
@@ -53,6 +53,21 @@ db:
 
 crons:
   sync_entries:
+    enabled: true
+    trigger:
+      hour: 0
+      minute: 0
+  send_subscription_emails_daily:
+    enabled: true
+    trigger:
+      hour: 0
+      minute: 0
+  send_subscription_emails_weekly:
+    enabled: true
+    trigger:
+      hour: 0
+      minute: 0
+  send_subscription_emails_monthly:
     enabled: true
     trigger:
       hour: 0

@@ -22,6 +22,7 @@ from src.kvmflows.database.subscription import SubscriptionModel
 from src.kvmflows.database.entry import Entry as EntryModel
 from src.kvmflows.config.config import config
 from src.kvmflows.mail.mailgun import MailgunSender, EmailMessage
+from src.kvmflows.database.db import db
 
 
 def render_subscription_template(
@@ -133,46 +134,56 @@ def _format_entry_for_template(entry: Entry) -> dict:
     }
 
 
-async def fetch_active_subscriptions() -> List[Subscription]:
+async def fetch_active_subscriptions(
+    interval: SubscriptionInterval,
+) -> List[Subscription]:
     """
-    Fetch all active subscriptions from the database.
+    Fetch all active subscriptions from the database that match the specified interval.
+
+    Args:
+        interval: The subscription interval to filter by
 
     Returns:
-        List of active subscription objects
+        List of active subscription objects matching the specified interval
 
     Note:
         Currently uses synchronous database queries. This can be optimized
         with proper async database operations in the future.
     """
     try:
-        # Ensure database connection is available
-        from src.kvmflows.database.db import db
-
         if db.is_closed():
             db.connect()
 
-        # Query for all active subscriptions
+        # Query for all active subscriptions that match the specified interval
         subscription_models = list(
-            SubscriptionModel.select().where(SubscriptionModel.is_active)
+            SubscriptionModel.select().where(
+                (SubscriptionModel.is_active)
+                & (SubscriptionModel.interval == interval.value)
+            )
         )
 
         # Convert database models to Pydantic objects
         subscriptions = [sub_model.to_pydantic() for sub_model in subscription_models]
 
-        logger.info(f"Fetched {len(subscriptions)} active subscriptions")
+        logger.info(
+            f"Fetched {len(subscriptions)} active subscriptions for {interval} interval"
+        )
         return subscriptions
 
     except Exception as e:
-        logger.error(f"Error fetching active subscriptions: {e}")
+        logger.error(f"Error fetching active subscriptions for {interval}: {e}")
         return []
 
 
-async def fetch_entries_for_subscription(subscription: Subscription) -> List[Entry]:
+async def fetch_entries_for_subscription(
+    subscription: Subscription, interval: SubscriptionInterval
+) -> List[Entry]:
     """
     Fetch entries that match a subscription's geographic bounds and time interval.
 
     Args:
-        subscription: The subscription containing geographic and temporal filters
+        subscription: The subscription containing geographic filters
+        interval: The subscription interval to use for filtering entries by date range
 
     Returns:
         List of entries matching the subscription criteria
@@ -182,8 +193,7 @@ async def fetch_entries_for_subscription(subscription: Subscription) -> List[Ent
         with proper async database operations in the future.
     """
     try:
-        # Calculate time range based on subscription interval
-        interval = SubscriptionInterval(subscription.interval)
+        # Calculate time range based on provided interval
         interval_datetimes = interval.passed_interval_datestime
 
         # Ensure database connection is available
@@ -193,7 +203,7 @@ async def fetch_entries_for_subscription(subscription: Subscription) -> List[Ent
             db.connect()
 
         # Query entries within geographic bounds and time range
-        # Use updated_at for safer filtering as it reflects when entries were last modified
+        # Use updated_at for filtering entries within the time interval
         entry_models = list(
             EntryModel.select().where(
                 (EntryModel.lat >= subscription.lat_min)
@@ -203,8 +213,8 @@ async def fetch_entries_for_subscription(subscription: Subscription) -> List[Ent
                 & (
                     EntryModel.updated_at.is_null(False)
                 )  # Ensure updated_at is not null
-                # & (EntryModel.updated_at >= interval_datetimes.start_datetime)
-                # & (EntryModel.updated_at < interval_datetimes.end_datetime)
+                & (EntryModel.updated_at >= interval_datetimes.start_datetime)
+                & (EntryModel.updated_at < interval_datetimes.end_datetime)
             )
         )
 
@@ -224,7 +234,7 @@ async def fetch_entries_for_subscription(subscription: Subscription) -> List[Ent
         return []
 
 
-async def send_subscription_emails():
+async def send_subscription_emails(interval: SubscriptionInterval):
     """
     Send subscription emails using the rendered template.
 
@@ -234,23 +244,30 @@ async def send_subscription_emails():
     3. Render email templates with subscription and entry data
     4. Send emails in bulk using the Mailgun service
 
+    Args:
+        interval: The subscription interval to use for filtering entries by date range
+
     The function tracks and logs success/failure statistics for monitoring.
     """
-    logger.info("Starting subscription email sending process...")
+    logger.info(
+        f"Starting subscription email sending process for {interval} interval..."
+    )
 
     try:
-        # Step 1: Fetch all active subscriptions
-        subscriptions = await fetch_active_subscriptions()
+        # Step 1: Fetch all active subscriptions for the specified interval
+        subscriptions = await fetch_active_subscriptions(interval)
 
         if not subscriptions:
-            logger.info("No active subscriptions found")
+            logger.info(f"No active subscriptions found for {interval} interval")
             return
 
-        logger.info(f"Processing {len(subscriptions)} active subscriptions")
+        logger.info(
+            f"Processing {len(subscriptions)} active subscriptions for {interval} interval"
+        )
 
         # Step 2-3: Process subscriptions and prepare emails
         email_messages, skipped_count = await _prepare_subscription_emails(
-            subscriptions
+            subscriptions, interval
         )
 
         # Step 4: Send emails in bulk if any were prepared
@@ -266,12 +283,14 @@ async def send_subscription_emails():
 
 async def _prepare_subscription_emails(
     subscriptions: List[Subscription],
+    interval: SubscriptionInterval,
 ) -> tuple[List[EmailMessage], int]:
     """
     Process subscriptions and prepare email messages for bulk sending.
 
     Args:
         subscriptions: List of active subscriptions to process
+        interval: The subscription interval to use for filtering entries by date range
 
     Returns:
         Tuple of (email_messages, skipped_count)
@@ -286,7 +305,7 @@ async def _prepare_subscription_emails(
             )
 
             # Fetch entries matching this subscription's criteria
-            entries = await fetch_entries_for_subscription(subscription)
+            entries = await fetch_entries_for_subscription(subscription, interval)
 
             if not entries:
                 logger.debug(f"No new entries found for subscription {subscription.id}")
@@ -494,7 +513,8 @@ def _test_complete_flow():
     async def run_test():
         try:
             print("Testing complete subscription email flow...")
-            await send_subscription_emails()
+            # Use DAILY interval as an example for testing
+            await send_subscription_emails(SubscriptionInterval.DAILY)
             print("Flow completed successfully!")
         except Exception as e:
             logger.error(f"Error in complete flow: {e}")
