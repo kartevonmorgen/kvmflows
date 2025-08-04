@@ -30,40 +30,45 @@ from src.kvmflows.database.db import db
 # =============================================================================
 
 
-async def send_subscription_emails(interval: SubscriptionInterval):
+async def send_subscription_emails(
+    interval: SubscriptionInterval, subscription_type: EntrySubscriptionType
+):
     """
     Send subscription emails using the rendered template.
 
     This function implements the complete email subscription flow:
-    1. Fetch all active subscriptions from the database
-    2. For each subscription, fetch relevant entries based on location and time
-    3. Render email templates with subscription and entry data
+    1. Fetch all active subscriptions from the database for the specified type
+    2. For each subscription, fetch relevant entries based on location, time, and subscription type
+    3. Render email templates with subscription data
     4. Send emails in bulk using the Mailgun service
 
     Args:
         interval: The subscription interval to use for filtering entries by date range
+        subscription_type: The type of subscription (creates, updates, tags) to filter subscriptions and entries
 
     The function tracks and logs success/failure statistics for monitoring.
     """
     logger.info(
-        f"Starting subscription email sending process for {interval} interval..."
+        f"Starting subscription email sending process for {interval} interval and {subscription_type} type..."
     )
 
     try:
-        # Step 1: Fetch all active subscriptions for the specified interval
-        subscriptions = await fetch_active_subscriptions(interval)
+        # Step 1: Fetch all active subscriptions for the specified interval and type
+        subscriptions = await fetch_active_subscriptions(interval, subscription_type)
 
         if not subscriptions:
-            logger.info(f"No active subscriptions found for {interval} interval")
+            logger.info(
+                f"No active subscriptions found for {interval} interval and {subscription_type} type"
+            )
             return
 
         logger.info(
-            f"Processing {len(subscriptions)} active subscriptions for {interval} interval"
+            f"Processing {len(subscriptions)} active subscriptions for {interval} interval and {subscription_type} type"
         )
 
         # Step 2-3: Process subscriptions and prepare emails
         email_messages, skipped_count = await _prepare_subscription_emails(
-            subscriptions, interval
+            subscriptions, interval, subscription_type
         )
 
         # Step 4: Send emails in bulk if any were prepared
@@ -83,16 +88,17 @@ async def send_subscription_emails(interval: SubscriptionInterval):
 
 
 async def fetch_active_subscriptions(
-    interval: SubscriptionInterval,
+    interval: SubscriptionInterval, subscription_type: EntrySubscriptionType
 ) -> List[Subscription]:
     """
-    Fetch all active subscriptions from the database that match the specified interval.
+    Fetch all active subscriptions from the database that match the specified interval and type.
 
     Args:
         interval: The subscription interval to filter by
+        subscription_type: The subscription type to filter by
 
     Returns:
-        List of active subscription objects matching the specified interval
+        List of active subscription objects matching the specified interval and type
 
     Note:
         Currently uses synchronous database queries. This can be optimized
@@ -102,11 +108,12 @@ async def fetch_active_subscriptions(
         if db.is_closed():
             db.connect()
 
-        # Query for all active subscriptions that match the specified interval
+        # Query for all active subscriptions that match the specified interval and type
         subscription_models = list(
             SubscriptionModel.select().where(
                 (SubscriptionModel.is_active)
                 & (SubscriptionModel.interval == interval.value)
+                & (SubscriptionModel.subscription_type == subscription_type.value)
             )
         )
 
@@ -114,17 +121,21 @@ async def fetch_active_subscriptions(
         subscriptions = [sub_model.to_pydantic() for sub_model in subscription_models]
 
         logger.info(
-            f"Fetched {len(subscriptions)} active subscriptions for {interval} interval"
+            f"Fetched {len(subscriptions)} active subscriptions for {interval} interval and {subscription_type} type"
         )
         return subscriptions
 
     except Exception as e:
-        logger.error(f"Error fetching active subscriptions for {interval}: {e}")
+        logger.error(
+            f"Error fetching active subscriptions for {interval} and {subscription_type}: {e}"
+        )
         return []
 
 
 async def fetch_entries_for_subscription(
-    subscription: Subscription, interval: SubscriptionInterval
+    subscription: Subscription,
+    interval: SubscriptionInterval,
+    subscription_type: EntrySubscriptionType,
 ) -> List[Entry]:
     """
     Fetch entries that match a subscription's geographic bounds and time interval.
@@ -132,6 +143,7 @@ async def fetch_entries_for_subscription(
     Args:
         subscription: The subscription containing geographic filters
         interval: The subscription interval to use for filtering entries by date range
+        subscription_type: The subscription type to determine which date field to use for filtering
 
     Returns:
         List of entries matching the subscription criteria
@@ -151,20 +163,50 @@ async def fetch_entries_for_subscription(
             db.connect()
 
         # Query entries within geographic bounds and time range
-        # Use updated_at for filtering entries within the time interval
-        entry_models = list(
-            EntryModel.select().where(
-                (EntryModel.lat >= subscription.lat_min)
-                & (EntryModel.lat <= subscription.lat_max)
-                & (EntryModel.lng >= subscription.lon_min)
-                & (EntryModel.lng <= subscription.lon_max)
-                & (
-                    EntryModel.updated_at.is_null(False)
-                )  # Ensure updated_at is not null
-                & (EntryModel.updated_at >= interval_datetimes.start_datetime)
-                & (EntryModel.updated_at < interval_datetimes.end_datetime)
+        # Use different date fields based on subscription type
+        if subscription_type == EntrySubscriptionType.CREATES:
+            # For creates, filter by created_at
+            entry_models = list(
+                EntryModel.select().where(
+                    (EntryModel.lat >= subscription.lat_min)
+                    & (EntryModel.lat <= subscription.lat_max)
+                    & (EntryModel.lng >= subscription.lon_min)
+                    & (EntryModel.lng <= subscription.lon_max)
+                    & (EntryModel.created.is_null(False))  # Ensure created is not null
+                    & (EntryModel.created >= interval_datetimes.start_datetime)
+                    & (EntryModel.created < interval_datetimes.end_datetime)
+                )
             )
-        )
+        elif subscription_type == EntrySubscriptionType.UPDATES:
+            # For updates, filter by updated_at
+            entry_models = list(
+                EntryModel.select().where(
+                    (EntryModel.lat >= subscription.lat_min)
+                    & (EntryModel.lat <= subscription.lat_max)
+                    & (EntryModel.lng >= subscription.lon_min)
+                    & (EntryModel.lng <= subscription.lon_max)
+                    & (
+                        EntryModel.updated_at.is_null(False)
+                    )  # Ensure updated_at is not null
+                    & (EntryModel.updated_at >= interval_datetimes.start_datetime)
+                    & (EntryModel.updated_at < interval_datetimes.end_datetime)
+                )
+            )
+        else:
+            # For other types (like TAGS), default to updated_at for now
+            entry_models = list(
+                EntryModel.select().where(
+                    (EntryModel.lat >= subscription.lat_min)
+                    & (EntryModel.lat <= subscription.lat_max)
+                    & (EntryModel.lng >= subscription.lon_min)
+                    & (EntryModel.lng <= subscription.lon_max)
+                    & (
+                        EntryModel.updated_at.is_null(False)
+                    )  # Ensure updated_at is not null
+                    & (EntryModel.updated_at >= interval_datetimes.start_datetime)
+                    & (EntryModel.updated_at < interval_datetimes.end_datetime)
+                )
+            )
 
         # Convert database models to Pydantic objects
         entries = [entry_model.to_pydantic() for entry_model in entry_models]
@@ -173,7 +215,8 @@ async def fetch_entries_for_subscription(
             f"Fetched {len(entries)} entries for subscription {subscription.id} "
             f"(lat: {subscription.lat_min}-{subscription.lat_max}, "
             f"lng: {subscription.lon_min}-{subscription.lon_max}, "
-            f"time: {interval_datetimes.start_datetime} to {interval_datetimes.end_datetime})"
+            f"time: {interval_datetimes.start_datetime} to {interval_datetimes.end_datetime}, "
+            f"type: {subscription_type})"
         )
         return entries
 
@@ -190,6 +233,7 @@ async def fetch_entries_for_subscription(
 async def _prepare_subscription_emails(
     subscriptions: List[Subscription],
     interval: SubscriptionInterval,
+    subscription_type: EntrySubscriptionType,
 ) -> tuple[List[EmailMessage], int]:
     """
     Process subscriptions and prepare email messages for bulk sending.
@@ -197,6 +241,7 @@ async def _prepare_subscription_emails(
     Args:
         subscriptions: List of active subscriptions to process
         interval: The subscription interval to use for filtering entries by date range
+        subscription_type: The subscription type to determine entry filtering criteria
 
     Returns:
         Tuple of (email_messages, skipped_count)
@@ -211,7 +256,9 @@ async def _prepare_subscription_emails(
             )
 
             # Fetch entries matching this subscription's criteria
-            entries = await fetch_entries_for_subscription(subscription, interval)
+            entries = await fetch_entries_for_subscription(
+                subscription, interval, subscription_type
+            )
 
             if not entries:
                 logger.debug(f"No new entries found for subscription {subscription.id}")
@@ -541,8 +588,10 @@ def _test_complete_flow():
     async def run_test():
         try:
             print("Testing complete subscription email flow...")
-            # Use DAILY interval as an example for testing
-            await send_subscription_emails(SubscriptionInterval.DAILY)
+            # Use DAILY interval and CREATES type as an example for testing
+            await send_subscription_emails(
+                SubscriptionInterval.DAILY, EntrySubscriptionType.CREATES
+            )
             print("Flow completed successfully!")
         except Exception as e:
             logger.error(f"Error in complete flow: {e}")

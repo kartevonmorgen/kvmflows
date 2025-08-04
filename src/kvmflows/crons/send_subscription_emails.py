@@ -4,6 +4,7 @@ from loguru import logger
 
 from src.kvmflows.flows.send_subscription_emails import send_subscription_emails
 from src.kvmflows.models.subscription_interval import SubscriptionInterval
+from src.kvmflows.models.subscription_types import EntrySubscriptionType
 from src.kvmflows.config.config import config
 from src.kvmflows.crons.utils import async_job_wrapper
 
@@ -15,24 +16,84 @@ def run_cron():
     scheduler = BlockingScheduler(timezone="UTC")
 
     if config.crons.send_subscription_emails_daily.enabled:
-        logger.info("Daily send email cron job is enabled. Adding to scheduler...")
+        logger.info("Daily send email cron jobs are enabled. Adding to scheduler...")
+        # Creates job
         scheduler.add_job(
-            async_job_wrapper(lambda: send_subscription_emails(SubscriptionInterval.DAILY), job_name="send_subscription_emails_daily job"),
-            CronTrigger(**config.crons.send_subscription_emails_daily.trigger.model_dump()),
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.DAILY, EntrySubscriptionType.CREATES
+                ),
+                job_name="send_subscription_emails_daily_creates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_daily.trigger.model_dump()
+            ),
         )
-    
+        # Updates job
+        scheduler.add_job(
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.DAILY, EntrySubscriptionType.UPDATES
+                ),
+                job_name="send_subscription_emails_daily_updates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_daily.trigger.model_dump()
+            ),
+        )
+
     if config.crons.send_subscription_emails_weekly.enabled:
-        logger.info("Weekly send email cron job is enabled. Adding to scheduler...")
+        logger.info("Weekly send email cron jobs are enabled. Adding to scheduler...")
+        # Creates job
         scheduler.add_job(
-            async_job_wrapper(lambda: send_subscription_emails(SubscriptionInterval.WEEKLY), job_name="send_subscription_emails_weekly job"),
-            CronTrigger(**config.crons.send_subscription_emails_weekly.trigger.model_dump()),
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.WEEKLY, EntrySubscriptionType.CREATES
+                ),
+                job_name="send_subscription_emails_weekly_creates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_weekly.trigger.model_dump()
+            ),
         )
-    
-    if config.crons.send_subscription_emails_monthly.enabled:
-        logger.info("Monthly send email cron job is enabled. Adding to scheduler...")
+        # Updates job
         scheduler.add_job(
-            async_job_wrapper(lambda: send_subscription_emails(SubscriptionInterval.MONTHLY), job_name="send_subscription_emails_monthly job"),
-            CronTrigger(**config.crons.send_subscription_emails_monthly.trigger.model_dump()),
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.WEEKLY, EntrySubscriptionType.UPDATES
+                ),
+                job_name="send_subscription_emails_weekly_updates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_weekly.trigger.model_dump()
+            ),
+        )
+
+    if config.crons.send_subscription_emails_monthly.enabled:
+        logger.info("Monthly send email cron jobs are enabled. Adding to scheduler...")
+        # Creates job
+        scheduler.add_job(
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.MONTHLY, EntrySubscriptionType.CREATES
+                ),
+                job_name="send_subscription_emails_monthly_creates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_monthly.trigger.model_dump()
+            ),
+        )
+        # Updates job
+        scheduler.add_job(
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.MONTHLY, EntrySubscriptionType.UPDATES
+                ),
+                job_name="send_subscription_emails_monthly_updates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_monthly.trigger.model_dump()
+            ),
         )
 
     try:
