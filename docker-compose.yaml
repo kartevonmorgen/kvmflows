@@ -35,6 +35,16 @@ services:
     ports:
       - "7921:7921"
     command: poetry run python /app/src/kvmflows/apis/server.py
+  
+  syncronizer:
+    <<: *api-service-base
+    container_name: sync_container
+    command: poetry run python /app/src/kvmflows/crons/sync_entries.py
+  
+  subscription_email_service:
+    <<: *api-service-base
+    container_name: email_container
+    command: poetry run python /app/src/kvmflows/crons/send_subscription_emails.py
 
 networks:
   app_network:
