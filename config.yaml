@@ -60,17 +60,19 @@ crons:
   send_subscription_emails_daily:
     enabled: true
     trigger:
-      hour: 0
+      hour: 8
       minute: 0
   send_subscription_emails_weekly:
     enabled: true
     trigger:
-      hour: 0
+      day_of_week: 1 # Monday
+      hour: 8
       minute: 0
   send_subscription_emails_monthly:
     enabled: true
     trigger:
-      hour: 0
+      day: 1 # First day of the month
+      hour: 8
       minute: 0
 
 areas:

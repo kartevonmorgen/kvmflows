@@ -15,6 +15,7 @@ Kartevonmorgen Workflows (kvmflows) is a backend service for managing user subsc
 - **API Server**: Accepts subscription requests, handles activation/unsubscription, and manages user preferences.
 - **Email Service**: Sends activation emails and periodic batch notifications using Mailgun and Liquid templates.
 - **Cron Jobs**: Regularly scrape OpenFairDB for new/updated entries and trigger email notifications.
+- **Optimized Email Timing**: Subscription emails are scheduled for 8:00 AM UTC to maximize open rates and user engagement.
 
 ---
 
@@ -109,8 +110,10 @@ See [OpenAPI docs](config.yaml) for full endpoint details.
 2. **Activation email sent** with secure link.
 3. **User activates subscription.**
 4. **Cron jobs** scrape OpenFairDB for new/updated entries.
-5. **Batch emails** sent to users with relevant entries.
+5. **Batch emails** sent to users with relevant entries at 8:00 AM UTC for optimal engagement.
 6. **User can unsubscribe at any time.**
+
+> **Note**: Subscription emails are scheduled for 8:00 AM UTC as this timing significantly increases the likelihood of emails being read and acted upon by users. All service times operate in UTC timezone.
 
 ---
 
@@ -118,6 +121,8 @@ See [OpenAPI docs](config.yaml) for full endpoint details.
 
 - All settings are managed in `config.yaml`:
   - API keys, email templates, database credentials, cron schedules, area definitions, etc.
+  - Email timing is configured for 8:00 AM UTC delivery to maximize user engagement and read rates.
+  - All service operations run in UTC timezone for consistency across deployments.
 - Example email templates are in `src/kvmflows/templates/`.
 
 ---
