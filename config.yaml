@@ -19,7 +19,7 @@ app:
 
 email:
   domain: "dev.kartevonmorgen.org"
-  api_key: 
+  api_key: "REMOVED_SECRET"
   url: "https://api.eu.mailgun.net/v3/dev.kartevonmorgen.org/messages"
   rate_limit: 5 # requests to mailgun per second
   max_retries: 4
