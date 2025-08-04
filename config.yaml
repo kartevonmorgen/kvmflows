@@ -19,7 +19,7 @@ app:
 
 email:
   domain: "dev.kartevonmorgen.org"
-  api_key: "REMOVED_SECRET"
+  api_key: ${MAILGUN_API_KEY}
   url: "https://api.eu.mailgun.net/v3/dev.kartevonmorgen.org/messages"
   rate_limit: 5 # requests to mailgun per second
   max_retries: 4
@@ -47,7 +47,7 @@ ofdb:
 db:
   name: kvm
   user: postgres
-  password: REMOVED_SECRET
+  password: ${DB_PASSWORD}
   host: db
   port: 5432
 
