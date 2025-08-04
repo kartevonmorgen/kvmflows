@@ -8,7 +8,7 @@ kvm:
 app:
   title: "kartevonmorgen workflows"
   host: "0.0.0.0"
-  port: 7921 
+  port: 7921
   cors:
     allowed_origins: ["*"]
     allowed_methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
@@ -19,13 +19,13 @@ app:
 
 email:
   domain: "dev.kartevonmorgen.org"
-  api_key: ${MAILGUN_API_KEY}
+  api_key: ${env:MAILGUN_API_KEY}
   url: "https://api.eu.mailgun.net/v3/dev.kartevonmorgen.org/messages"
   rate_limit: 5 # requests to mailgun per second
   max_retries: 4
   retry_delay: 2
   concurrency: 10
-  test_email_recipient: "navidkalaei@gmail.com" # email to send test emails to. is optional
+  test_email_recipient: "${env:TEST_EMAIL_RECIPIENT}" # email to send test emails to. is optional
   unsubscribe_url: "http://localhost:8000/v1/subscriptions/{subscription_id}/unsubscribe" # change this to the unsubscribe url of your app
   activation_url: "http://localhost:8000/workflows/v1/subscriptions/{subscription_id}/activate" # URL pattern for subscription activation links
   templates:
@@ -47,7 +47,7 @@ ofdb:
 db:
   name: kvm
   user: postgres
-  password: ${DB_PASSWORD}
+  password: ${env:DB_PASSWORD}
   host: db
   port: 5432
 
