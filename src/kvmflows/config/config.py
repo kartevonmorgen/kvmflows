@@ -1,11 +1,14 @@
 import hydra
 
 from datetime import datetime
+from dotenv import load_dotenv
 from omegaconf import OmegaConf
 from pydantic import BaseModel, Field
 from typing import List, Optional, Tuple, Union
 from rich import print
 
+
+load_dotenv()
 
 class SourceOfdb(BaseModel):
     url: str
