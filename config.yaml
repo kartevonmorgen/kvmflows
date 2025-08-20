@@ -50,7 +50,7 @@ db:
   name: kvm
   user: postgres
   password: ${oc.env:DB_PASSWORD}
-  host: localhost
+  host: db 
   port: 5432
 
 crons:

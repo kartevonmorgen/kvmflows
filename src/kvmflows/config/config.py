@@ -1,4 +1,5 @@
 import hydra
+from hydra.core.global_hydra import GlobalHydra
 
 from datetime import datetime
 from dotenv import load_dotenv
@@ -137,8 +138,30 @@ class Config(BaseModel):
     areas: List[Area]
 
 
-hydra.initialize(version_base=None, config_path="../../..")
-cfg = hydra.compose("config")
+# Find the config file path relative to current working directory or absolute path
+cfg = None
+possible_paths = [
+    "../../..",  # Original relative path for local development
+    "/app",  # Docker container path
+    ".",  # Current directory
+]
+
+for path in possible_paths:
+    try:
+        hydra.initialize(version_base=None, config_path=path)
+        cfg = hydra.compose("config")
+        break
+    except Exception:
+        # If initialization fails, try the next path
+        if GlobalHydra.instance().is_initialized():
+            GlobalHydra.instance().clear()
+        continue
+
+if cfg is None:
+    raise RuntimeError(
+        "Could not find config.yaml file in any of the expected locations"
+    )
+
 resolved_cfg = OmegaConf.to_container(cfg, resolve=True)
 config = Config.model_validate(resolved_cfg)
 
