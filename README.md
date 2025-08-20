@@ -14,8 +14,10 @@ Kartevonmorgen Workflows (kvmflows) is a backend service for managing user subsc
 
 - **API Server**: Accepts subscription requests, handles activation/unsubscription, and manages user preferences.
 - **Email Service**: Sends activation emails and periodic batch notifications using Mailgun and Liquid templates.
-- **Cron Jobs**: Regularly scrape OpenFairDB for new/updated entries and trigger email notifications.
-- **Optimized Email Timing**: Subscription emails are scheduled for 8:00 AM UTC to maximize open rates and user engagement.
+- **Sync Flows**: Two-tier data synchronization strategy:
+  - **Full Sync**: Comprehensive scraping of all OpenFairDB entries for complete data coverage
+  - **Recent Sync**: Hourly updates fetching only recently changed entries for real-time responsiveness
+- **Optimized Email Timing**: Subscription emails are scheduled for 8:00 AM UTC to maximize open rates and user engagement, with hourly notifications at minute 5 to ensure recent sync completion.
 
 ---
 
@@ -75,10 +77,14 @@ Kartevonmorgen Workflows (kvmflows) is a backend service for managing user subsc
   ```sh
   poetry run python src/kvmflows/apis/server.py
   ```
-- **Run cron jobs manually:**
+- **Run sync flows manually:**
   ```sh
+  # Full synchronization of all entries
+  poetry run python src/kvmflows/crons/sync_all_entries.py
+  # Recent entries synchronization (hourly updates)
+  poetry run python src/kvmflows/crons/sync_recent_entries.py
+  # Send subscription emails
   poetry run python src/kvmflows/crons/send_subscription_emails.py
-  poetry run python src/kvmflows/crons/sync_entries.py
   ```
 
 #### Docker Compose
@@ -89,7 +95,8 @@ Kartevonmorgen Workflows (kvmflows) is a backend service for managing user subsc
   ```
   This will start:
   - API server (`server.py`)
-  - Entry synchronizer (`sync_entries.py`)
+  - Full entry synchronizer (`sync_all_entries.py`)
+  - Recent entry synchronizer (`sync_recent_entries.py`) - runs hourly
   - Subscription email service (`send_subscription_emails.py`)
 
 ---
@@ -109,19 +116,22 @@ See [OpenAPI docs](config.yaml) for full endpoint details.
 1. **User subscribes via API.**
 2. **Activation email sent** with secure link.
 3. **User activates subscription.**
-4. **Cron jobs** scrape OpenFairDB for new/updated entries.
-5. **Batch emails** sent to users with relevant entries at 8:00 AM UTC for optimal engagement.
+4. **Sync flows** continuously update entry data:
+   - **Full sync** scrapes all OpenFairDB entries for comprehensive coverage
+   - **Recent sync** runs hourly to capture newly changed entries
+5. **Batch emails** sent to users with relevant entries at 8:00 AM UTC for optimal engagement, with hourly notifications scheduled at minute 5 to ensure recent sync completion.
 6. **User can unsubscribe at any time.**
 
-> **Note**: Subscription emails are scheduled for 8:00 AM UTC as this timing significantly increases the likelihood of emails being read and acted upon by users. All service times operate in UTC timezone.
+> **Note**: Subscription emails are scheduled for 8:00 AM UTC as this timing significantly increases the likelihood of emails being read and acted upon by users. Hourly notifications are sent at minute 5 of each hour to allow the recent entries sync process to complete. All service times operate in UTC timezone.
 
 ---
 
 ## Configuration
 
 - All settings are managed in `config.yaml`:
-  - API keys, email templates, database credentials, cron schedules, area definitions, etc.
+  - API keys, email templates, database credentials, sync schedules, area definitions, etc.
   - Email timing is configured for 8:00 AM UTC delivery to maximize user engagement and read rates.
+  - Hourly notifications are scheduled at minute 5 of each hour to ensure recent entries sync completion.
   - All service operations run in UTC timezone for consistency across deployments.
 - Example email templates are in `src/kvmflows/templates/`.
 
