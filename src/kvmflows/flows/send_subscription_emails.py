@@ -588,9 +588,9 @@ def _test_complete_flow():
     async def run_test():
         try:
             print("Testing complete subscription email flow...")
-            # Use DAILY interval and CREATES type as an example for testing
+            # Use HOURLY interval and UPDATES type as an example for testing
             await send_subscription_emails(
-                SubscriptionInterval.DAILY, EntrySubscriptionType.CREATES
+                SubscriptionInterval.HOURLY, EntrySubscriptionType.CREATES
             )
             print("Flow completed successfully!")
         except Exception as e:
