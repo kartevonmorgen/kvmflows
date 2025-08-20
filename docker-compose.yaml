@@ -36,11 +36,16 @@ services:
       - "7921:7921"
     command: poetry run python /app/src/kvmflows/apis/server.py
   
-  syncronizer:
+  # syncronizer_all:
+  #   <<: *api-service-base
+  #   container_name: sync_all_entries_container
+  #   command: poetry run python /app/src/kvmflows/crons/sync_all_entries.py
+
+  syncronizer_recent_entries:
     <<: *api-service-base
-    container_name: sync_container
-    command: poetry run python /app/src/kvmflows/crons/sync_entries.py
-  
+    container_name: sync_recently_changed_entries_container
+    command: poetry run python /app/src/kvmflows/crons/sync_recent_entries.py
+
   subscription_email_service:
     <<: *api-service-base
     container_name: email_container
