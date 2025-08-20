@@ -4,11 +4,12 @@ from datetime import datetime
 from dotenv import load_dotenv
 from omegaconf import OmegaConf
 from pydantic import BaseModel, Field
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union, Literal
 from rich import print
 
 
 load_dotenv()
+
 
 class SourceOfdb(BaseModel):
     url: str
@@ -115,7 +116,9 @@ class CronConfig(BaseModel):
 
 
 class CronsConfig(BaseModel):
-    sync_entries: CronConfig
+    sync_all_entries: CronConfig
+    sync_recent_entries: CronConfig
+    send_subscription_emails_hourly: CronConfig
     send_subscription_emails_daily: CronConfig
     send_subscription_emails_weekly: CronConfig
     send_subscription_emails_monthly: CronConfig
@@ -123,6 +126,9 @@ class CronsConfig(BaseModel):
 
 class Config(BaseModel):
     start_datetime: datetime
+    log_level: Literal[
+        "TRACE", "DEBUG", "INFO", "SUCCESS", "WARNING", "ERROR", "CRITICAL"
+    ]
     app: AppConfig
     email: EmailConfig
     ofdb: OfdbConfig

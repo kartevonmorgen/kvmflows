@@ -1,5 +1,6 @@
 # for entries with create time before this date, we will be skipped
 start_datetime: "2025-07-27T23:11:33.007+00:00"
+log_level: "INFO"
 
 kvm:
   base_url: "https://dev.kartevonmorgen.org"
@@ -43,19 +44,29 @@ ofdb:
   max_retries: 10
   retry_delay: 5
   concurrency: 15 # Reduced from 30 to avoid 503 errors
+  timeout: 10 # Timeout for OFDB requests in seconds
 
 db:
   name: kvm
   user: postgres
   password: ${oc.env:DB_PASSWORD}
-  host: db
+  host: localhost
   port: 5432
 
 crons:
-  sync_entries:
+  sync_recent_entries:
     enabled: true
     trigger:
       hour: 0
+      minute: 0
+  sync_all_entries:
+    enabled: false
+    trigger:
+      hour: 0
+      minute: 0
+  send_subscription_emails_hourly:
+    enabled: true
+    trigger:
       minute: 0
   send_subscription_emails_daily:
     enabled: true
