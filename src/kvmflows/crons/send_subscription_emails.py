@@ -15,6 +15,33 @@ def run_cron():
     """
     scheduler = BlockingScheduler(timezone="UTC")
 
+    if config.crons.send_subscription_emails_hourly.enabled:
+        logger.info("Hourly send email cron jobs are enabled. Adding to scheduler...")
+        # Creates job
+        scheduler.add_job(
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.HOURLY, EntrySubscriptionType.CREATES
+                ),
+                job_name="send_subscription_emails_hourly_creates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_hourly.trigger.model_dump()
+            ),
+        )
+        # Updates job
+        scheduler.add_job(
+            async_job_wrapper(
+                lambda: send_subscription_emails(
+                    SubscriptionInterval.HOURLY, EntrySubscriptionType.UPDATES
+                ),
+                job_name="send_subscription_emails_hourly_updates job",
+            ),
+            CronTrigger(
+                **config.crons.send_subscription_emails_hourly.trigger.model_dump()
+            ),
+        )
+
     if config.crons.send_subscription_emails_daily.enabled:
         logger.info("Daily send email cron jobs are enabled. Adding to scheduler...")
         # Creates job
