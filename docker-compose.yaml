@@ -57,6 +57,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      replicas: 1
 
   subscription_email_service:
     <<: *api-service-base
@@ -65,6 +67,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      replicas: 1
 
 networks:
   app_network:
