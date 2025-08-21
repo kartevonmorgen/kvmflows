@@ -8,8 +8,6 @@ RUN pip install poetry
 
 COPY . .
 
-EXPOSE 8000
-
 RUN poetry config virtualenvs.create false
 
 RUN poetry install --no-root --no-interaction --no-ansi

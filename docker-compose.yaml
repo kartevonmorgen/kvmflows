@@ -28,6 +28,12 @@ services:
       - app_network
     volumes:
       - ./config.yaml:/app/config.yaml
+    environment:
+      - MAILGUN_API_KEY=${MAILGUN_API_KEY}
+      - TEST_EMAIL_RECIPIENT=${TEST_EMAIL_RECIPIENT}
+      - DB_PASSWORD=${DB_PASSWORD}
+    deploy:
+      replicas: 0
   
   api:
     <<: *api-service-base
@@ -35,6 +41,9 @@ services:
     ports:
       - "7921:7921"
     command: poetry run python /app/src/kvmflows/apis/server.py
+    depends_on:
+      db:
+        condition: service_healthy
   
   # syncronizer_all:
   #   <<: *api-service-base
@@ -45,11 +54,17 @@ services:
     <<: *api-service-base
     container_name: sync_recently_changed_entries_container
     command: poetry run python /app/src/kvmflows/crons/sync_recent_entries.py
+    depends_on:
+      db:
+        condition: service_healthy
 
   subscription_email_service:
     <<: *api-service-base
     container_name: email_container
     command: poetry run python /app/src/kvmflows/crons/send_subscription_emails.py
+    depends_on:
+      db:
+        condition: service_healthy
 
 networks:
   app_network:

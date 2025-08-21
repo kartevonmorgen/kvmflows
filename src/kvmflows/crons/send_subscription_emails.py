@@ -127,3 +127,7 @@ def run_cron():
         scheduler.start()
     except (KeyboardInterrupt, SystemExit):
         logger.info("Scheduler stopped.")
+
+
+if __name__ == "__main__":
+    run_cron()
