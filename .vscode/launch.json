@@ -11,11 +11,13 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "justMyCode": true,
-            "env": {"PYTHONPATH": "${workspaceFolder}${pathSeparator}${env:PYTHONPATH}"},
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}${pathSeparator}${env:PYTHONPATH}"
+            },
             "terminal.integrated.env.linux": {
                 "PYTHONPATH": "${workspaceFolder}"
-              },              
+            },
+            "python": "C:/Users/navid/micromamba/envs/kvmsubs/python.exe"
         }
     ],
-  
-  }
+}

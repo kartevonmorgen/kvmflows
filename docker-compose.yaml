@@ -44,6 +44,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+    deploy:
+      replicas: 1
   
   # syncronizer_all:
   #   <<: *api-service-base
